@@ -31,13 +31,12 @@
               # Deno wants to create cache directories.
               # By default $HOME points to /homeless-shelter, which isn't writable.
               HOME="$(mktemp -d)"
-              mkdir $HOME/pkg-src
-              cp -r ${self}/* $HOME/pkg-src/
-              cd $HOME/pkg-src
+              # mkdir $HOME/pkg-src
+              # cp -r ${self}/* $HOME/pkg-src/
+              # cd $HOME/pkg-src
 
               # Build vendor directory
               ${lib.getExe deno} cache --allow-import index.ts
-              # >2& ls
               cp -r ./vendor $out
             '';
 
