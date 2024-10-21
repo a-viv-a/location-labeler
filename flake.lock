@@ -1,5 +1,18 @@
 {
   "nodes": {
+    "denoflare-cli": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1705950247,
+        "narHash": "sha256-1ZYVy4OG8405440T32YGNzQ6l9/cqyT73zxK2dAUSMU=",
+        "type": "tarball",
+        "url": "https://github.com/skymethod/denoflare/archive/refs/tags/v0.6.0.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/skymethod/denoflare/archive/refs/tags/v0.6.0.tar.gz"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1729265718,
@@ -18,6 +31,7 @@
     },
     "root": {
       "inputs": {
+        "denoflare-cli": "denoflare-cli",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }
