@@ -1,0 +1,8 @@
+{
+  "tasks": {
+    "dev": "brawler dev index.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}
