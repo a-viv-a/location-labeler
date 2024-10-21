@@ -27,6 +27,7 @@
             ];
             src = ./.;
 
+            # TODO: avoid copying everything...
             buildCommand = ''
               # Deno wants to create cache directories.
               # By default $HOME points to /homeless-shelter, which isn't writable.
@@ -36,15 +37,15 @@
               cd $HOME/pkg-src
 
               # Build vendor directory
-              deno cache --vendor --allow-import index.ts
-              cp -r $HOME/pkg-src $out
+              deno cache --allow-import index.ts
+              cp -r ./vendor $out
             '';
 
             # Here we specify the hash, which makes this a fixed-output derivation.
             # When inputs have changed, outputHash should be set to empty, to recalculate the new hash.
             outputHashAlgo = "sha256";
             outputHashMode = "recursive";
-            outputHash = "sha256-Q8j+jnAgx6aFnmY/tNgMgCzRn5O1CsYi9tuM8Phe450=";
+            outputHash = "sha256-xXnbh1ekKZijMHG1kgYG5/akCOpYFLqI9/8gKYimbJw=";
           };
         devShell =
           with pkgs;
@@ -52,14 +53,12 @@
             buildInputs = [
               deno
               wrangler
-              (writeShellApplication {
-                name = "import-map";
-
-                text = ''
-                  cat ${self.packages.${system}.deno-vendor}/import-map.json
-                '';
-              })
             ];
+
+            shellHook = ''
+              export DENO_VENDOR="${self.packages.${system}.deno-vendor}"
+              ln -s $DENO_VENDOR ./vendor
+            '';
           };
       }
     );
