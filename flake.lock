@@ -1,18 +1,5 @@
 {
   "nodes": {
-    "brawler-cli": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1693805455,
-        "narHash": "sha256-OcmpE12OO8VYdaTqbsZB/3YSFKXI00/VaQyKkeDbs1A=",
-        "type": "tarball",
-        "url": "https://github.com/hasundue/brawler/archive/refs/tags/0.2.1.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://github.com/hasundue/brawler/archive/refs/tags/0.2.1.tar.gz"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1729265718,
@@ -31,7 +18,6 @@
     },
     "root": {
       "inputs": {
-        "brawler-cli": "brawler-cli",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }

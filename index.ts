@@ -1,9 +1,7 @@
-export default {
-    async fetch(request: Request, env: any) {
-        try {
-            return new Response('hi')
-        } catch (e) {
-            return new Response(e.message)
-        }
-    },
-}
+import { Hono } from "npm:hono@4.6.5";
+
+const app = new Hono()
+
+app.get('/', (c) => c.text('hiiii'))
+
+export default app

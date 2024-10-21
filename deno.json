@@ -1,8 +1,11 @@
 {
+  "vendor": true,
   "tasks": {
     "dev": "brawler dev index.ts"
   },
-  "imports": {
-    "@std/assert": "jsr:@std/assert@1"
+  "compilerOptions": {
+    "types": [
+      "https://pax.deno.dev/cloudflare/workers-types/index.d.ts"
+    ]
   }
 }
