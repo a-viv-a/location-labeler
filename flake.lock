@@ -1,16 +1,16 @@
 {
   "nodes": {
-    "denoflare-cli": {
+    "brawler-cli": {
       "flake": false,
       "locked": {
-        "lastModified": 1705950247,
-        "narHash": "sha256-1ZYVy4OG8405440T32YGNzQ6l9/cqyT73zxK2dAUSMU=",
+        "lastModified": 1693805455,
+        "narHash": "sha256-OcmpE12OO8VYdaTqbsZB/3YSFKXI00/VaQyKkeDbs1A=",
         "type": "tarball",
-        "url": "https://github.com/skymethod/denoflare/archive/refs/tags/v0.6.0.tar.gz"
+        "url": "https://github.com/hasundue/brawler/archive/refs/tags/0.2.1.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://github.com/skymethod/denoflare/archive/refs/tags/v0.6.0.tar.gz"
+        "url": "https://github.com/hasundue/brawler/archive/refs/tags/0.2.1.tar.gz"
       }
     },
     "nixpkgs": {
@@ -31,7 +31,7 @@
     },
     "root": {
       "inputs": {
-        "denoflare-cli": "denoflare-cli",
+        "brawler-cli": "brawler-cli",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }

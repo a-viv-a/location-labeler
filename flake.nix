@@ -2,9 +2,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
-    denoflare-cli = {
+    brawler-cli = {
       # change the version here to update
-      url = "https://github.com/skymethod/denoflare/archive/refs/tags/v0.6.0.tar.gz";
+      url = "https://github.com/hasundue/brawler/archive/refs/tags/0.2.1.tar.gz";
       flake = false;
     };
   };
@@ -14,7 +14,7 @@
       self,
       nixpkgs,
       utils,
-      denoflare-cli,
+      brawler-cli,
     }:
     utils.lib.eachDefaultSystem (
       system:
@@ -27,20 +27,27 @@
           mkShell {
             buildInputs = [
               deno
+              wrangler
               # this is... not pure, but it works
               (writeShellApplication {
-                name = "denoflare";
-                # no need, we can just reference it
-                # runtimeInputs = [ deno ];
+                name = "brawler";
+                runtimeInputs = [
+                  deno
+                  esbuild
+                ];
                 text = ''
-                  ${lib.getExe deno} run \
-                  --unstable-worker-options \
+                  # this is super evil...
+                  LOCK=$(mktemp)
+                  cat "${brawler-cli}/deno.lock" > "$LOCK"
+                  # shellcheck disable=SC2068
+                  exec ${lib.getExe deno} run \
+                  --lock="$LOCK" \
                   --allow-read \
-                  --allow-net \
-                  --allow-env \
+                  --allow-write \
                   --allow-run \
-                  --allow-import \
-                  "${denoflare-cli}/cli/cli.ts" "$@"
+                  --allow-env \
+                  --allow-net \
+                  "${brawler-cli}/cli.ts" $@
                 '';
               })
             ];
