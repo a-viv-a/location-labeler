@@ -1,7 +1,7 @@
-import { Hono } from "npm:hono@4.6.5";
+import { Hono } from "jsr:@hono/hono@4.6.5";
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/', (c) => c.text('hiiii'))
+app.get("/", (c) => c.text("hiiii"));
 
-export default app
+export default app;
