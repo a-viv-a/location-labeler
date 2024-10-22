@@ -5,7 +5,7 @@ deploy:
     wrangler deploy
 
 test:
-    npx vitest
+    npx vitest --exclude ".direnv/**"
 
 typegen:
     wrangler types
