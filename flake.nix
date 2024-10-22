@@ -23,6 +23,7 @@
               nodejs_20
               wrangler
               just
+              typescript-language-server
             ];
           };
       }
