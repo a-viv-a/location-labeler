@@ -1,6 +1,10 @@
 import { hasFlag } from "country-flag-icons";
 import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import { Hono } from "hono";
+import {
+  point,
+  distance
+} from "@turf/turf";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -65,8 +69,30 @@ app.post('/request-label', async (c) => {
     return c.json({ msg: "invalid / missing lat and long query params" })
   }
 
+
+  const cf_longitude_string= c.req.raw.cf?.longitude;
+  const cf_latitude_string = c.req.raw.cf?.latitude;
+  if (cf_longitude_string == undefined || cf_latitude_string == undefined) {
+    c.status(500)
+    return c.json({msg: "cloudflare did not estimate lat/lon for request"})
+  }
+
   const latitude = parseFloat(latitude_string)
   const longitude = parseFloat(longitude_string)
+  const cf_latitude = parseFloat(cf_latitude_string as string)
+  const cf_longitude = parseFloat(cf_longitude_string as string)
+
+  console.log({
+    latitude, longitude, cf_latitude, cf_longitude
+  })
+
+  // turf is lon, lat
+  const param_point = point([longitude, latitude])
+  const cf_point = point([cf_longitude, cf_latitude])
+  const estimated_distance_miles = distance(param_point, cf_point, { units: 'miles'});
+  console.log({
+    estimated_distance_miles
+  })
 
   const headers = new Headers({
     "User-Agent": "Bluesky Location Labeler"
@@ -78,13 +104,12 @@ app.post('/request-label', async (c) => {
     "body": null,
     "method": "GET"
   });
-  console.log(resp.body)
   const place = await resp.json() as Place;
 
   const label = format_label(place.address.city, place.address['ISO3166-2-lvl4'])
   c.status(200)
   console.log(label)
-  return c.json({ display_name: place.display_name })
+  return c.json({ display_name: place.display_name, label, estimated_distance_miles })
 })
 
 export default app;

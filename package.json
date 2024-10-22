@@ -16,6 +16,7 @@
     "vitest": "2.0.5"
   },
   "dependencies": {
+    "@turf/turf": "^7.1.0",
     "country-flag-icons": "^1.5.13",
     "hono": "^4.6.5"
   }
