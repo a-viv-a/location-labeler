@@ -1,3 +1,5 @@
+import { hasFlag } from "country-flag-icons";
+import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import { Hono } from "hono";
 
 /**
@@ -36,6 +38,17 @@ type Place = {
   },
 };
 
+const format_label = (city: string, iso: string) => {
+  let s = iso.split('-')
+  let country = s[0]
+  let rest = s.slice(1).join('-')
+  if (!hasFlag(country)) {
+    return `${city} ${rest} ${country}`
+  }
+
+  return `${city} ${rest} ${getUnicodeFlagIcon(country)}`
+}
+
 app.get('/', (c) => c.text("hiiiiii"))
 app.post('/request-label', async (c) => {
   const token = c.req.header('Token')
@@ -68,9 +81,10 @@ app.post('/request-label', async (c) => {
   console.log(resp.body)
   const place = await resp.json() as Place;
 
+  const label = format_label(place.address.city, place.address['ISO3166-2-lvl4'])
   c.status(200)
-  console.log(place.address.city, place.address["ISO3166-2-lvl4"])
-  return c.json({ location: "place" })
+  console.log(label)
+  return c.json({ display_name: place.display_name })
 })
 
 export default app;

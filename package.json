@@ -16,6 +16,7 @@
     "vitest": "2.0.5"
   },
   "dependencies": {
+    "country-flag-icons": "^1.5.13",
     "hono": "^4.6.5"
   }
 }
