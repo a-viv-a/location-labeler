@@ -5,6 +5,7 @@ import {
   point,
   distance
 } from "@turf/turf";
+import { createLabel, recordLabel } from "./atproto";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -57,6 +58,7 @@ const format_label = (city: string, iso: string) => {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+
 app.get('/', (c) => c.text("hiiiiii"))
 app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
   console.log({
@@ -76,16 +78,16 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
 
   // we can hide in here, but only for ~30 seconds...
   c.executionCtx.waitUntil((async () => {
-    while(true) {
-      await sleep(500)
-      try {
-        server.send("message")
-      } catch(e) {
-        console.log({e})
-        continue;
-      }
-      break;
-    }
+    // while(true) {
+    //   await sleep(500)
+    //   try {
+    //     server.send("message")
+    //   } catch(e) {
+    //     console.log({e})
+    //     continue;
+    //   }
+    //   break;
+    // }
     console.log("sent message")
     await sleep(30_000)
     console.log("closing connection")
@@ -96,6 +98,14 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
     status: 101,
     webSocket: client
   })
+})
+app.post('/evil-test', async (c) => {
+  await recordLabel(c.env, createLabel("TODO", {
+    val: "test",
+    uri: "uri",
+  }))
+
+  c.status(200)
 })
 app.post('/request-label', async (c) => {
   const token = c.req.header('Token')
@@ -113,11 +123,11 @@ app.post('/request-label', async (c) => {
   }
 
 
-  const cf_longitude_string= c.req.raw.cf?.longitude;
+  const cf_longitude_string = c.req.raw.cf?.longitude;
   const cf_latitude_string = c.req.raw.cf?.latitude;
   if (cf_longitude_string == undefined || cf_latitude_string == undefined) {
     c.status(500)
-    return c.json({msg: "cloudflare did not estimate lat/lon for request"})
+    return c.json({ msg: "cloudflare did not estimate lat/lon for request" })
   }
 
   const latitude = parseFloat(latitude_string)
@@ -132,7 +142,7 @@ app.post('/request-label', async (c) => {
   // turf is lon, lat
   const param_point = point([longitude, latitude])
   const cf_point = point([cf_longitude, cf_latitude])
-  const estimated_distance_miles = distance(param_point, cf_point, { units: 'miles'});
+  const estimated_distance_miles = distance(param_point, cf_point, { units: 'miles' });
   console.log({
     estimated_distance_miles
   })

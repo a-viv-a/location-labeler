@@ -2,7 +2,12 @@
 name = "location-labeler"
 main = "src/index.ts"
 compatibility_date = "2024-09-25"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat_v2"]
+
+[alias]
+"@fastify/websocket" = "./node_stubs/fastify_websocket"
+"fastify" = "./node_stubs/fastify"
+"libsql" = "./node_stubs/libsql"
 
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
