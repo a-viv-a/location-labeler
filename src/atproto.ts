@@ -1,4 +1,5 @@
 import { labelIsSigned,  signLabel,  UnsignedLabel } from "@skyware/labeler";
+import { nulled } from "./util";
 
 // export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
 //   if (!Number.isNaN(cursor)) {
@@ -52,7 +53,7 @@ export const recordLabel = async (env: Env, label: UnsignedLabel) => {
 
   const { src, uri, cid, val, neg, cts, exp, sig } = signed;
   // const result = stmt.run(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig);
-  const result = await stmt.bind([src, uri, cid, val, neg ? 1 : 0, cts, exp, sig]).first()
+  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first()
   console.log({ result })
   if (result == null || !result.changes) throw new Error("Failed to insert label");
 
