@@ -3,7 +3,8 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { createLabel,  ensureLabelExists,  recordLabel } from "./atproto";
+import { createLabel, ensureLabelExists, recordLabel } from "./atproto";
+import { build_label_definition as buildLabelDefinition } from "./label";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -148,10 +149,10 @@ app.post('/request-label', async (c) => {
   });
   const place = await resp.json() as Place;
 
-  const en_locale_name = format_label(place.address.city, place.address['ISO3166-2-lvl4'])
+  const labelDefinition = buildLabelDefinition({ city: place.address.city, iso: place.address['ISO3166-2-lvl4'] })
+  await ensureLabelExists(c.env, labelDefinition)
   c.status(200)
-  console.log(en_locale_name)
-  return c.json({ display_name: place.display_name, label, estimated_distance_miles })
+  return c.json({ labelDefinition, estimated_distance_miles })
 })
 
 export default app;
