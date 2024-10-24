@@ -9,3 +9,10 @@ CREATE TABLE IF NOT EXISTS labels (
 	exp DATETIME,
 	sig BLOB
 );
+
+CREATE TABLE IF NOT EXISTS label_definitions (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	identifier TEXT UNIQUE,
+	en_locale_name TEXT,
+	en_locale_desc TEXT
+);
