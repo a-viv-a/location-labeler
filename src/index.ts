@@ -1,5 +1,3 @@
-import { hasFlag } from "country-flag-icons";
-import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import { Hono } from "hono";
 import {
   point,
@@ -45,16 +43,6 @@ type Place = {
   },
 };
 
-const format_label = (city: string, iso: string) => {
-  let s = iso.split('-')
-  let country = s[0]
-  let rest = s.slice(1).join('-')
-  if (!hasFlag(country)) {
-    return `${city} ${rest} ${country}`
-  }
-
-  return `${city} ${rest} ${getUnicodeFlagIcon(country)}`
-}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -100,11 +88,6 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
   })
 })
 app.post('/evil-test', async (c) => {
-  // await recordLabel(c.env, createLabel("TODO", {
-  //   val: "test",
-  //   uri: "uri",
-  // }))
-
   await ensureLabelExists(c.env, {
     identifier: "test-three",
     en_locale_name: 'test 3',
@@ -165,9 +148,9 @@ app.post('/request-label', async (c) => {
   });
   const place = await resp.json() as Place;
 
-  const label = format_label(place.address.city, place.address['ISO3166-2-lvl4'])
+  const en_locale_name = format_label(place.address.city, place.address['ISO3166-2-lvl4'])
   c.status(200)
-  console.log(label)
+  console.log(en_locale_name)
   return c.json({ display_name: place.display_name, label, estimated_distance_miles })
 })
 
