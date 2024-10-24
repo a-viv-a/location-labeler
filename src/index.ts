@@ -13,7 +13,9 @@ import {
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-const app = new Hono();
+const app = new Hono<{
+  Bindings: Env
+}>();
 
 // https://nominatim.org/release-docs/latest/api/Output/
 type Place = {
@@ -54,6 +56,27 @@ const format_label = (city: string, iso: string) => {
 }
 
 app.get('/', (c) => c.text("hiiiiii"))
+app.get('/labeler-ws', (c) => {
+  const upgradeHeader = c.req.header('Upgrade')
+  if (!upgradeHeader || upgradeHeader != 'websocket') {
+    c.status(426)
+    return c.text('Expected Upgrade: websocket')
+  }
+
+  const wsPair = new WebSocketPair();
+  const [client, server] = Object.values(wsPair);
+
+  server.accept();
+
+  server.addEventListener('message', (e) => {
+    console.log({message_data: e.data})
+  })
+
+  return new Response(null, {
+    status: 101,
+    webSocket: client
+  })
+})
 app.post('/request-label', async (c) => {
   const token = c.req.header('Token')
 
