@@ -55,8 +55,14 @@ const format_label = (city: string, iso: string) => {
   return `${city} ${rest} ${getUnicodeFlagIcon(country)}`
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 app.get('/', (c) => c.text("hiiiiii"))
-app.get('/labeler-ws', (c) => {
+app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
+  console.log({
+    route: '/xrpc/com.atproto.label.subscribeLabels',
+    queries: c.req.queries()
+  })
   const upgradeHeader = c.req.header('Upgrade')
   if (!upgradeHeader || upgradeHeader != 'websocket') {
     c.status(426)
@@ -68,9 +74,23 @@ app.get('/labeler-ws', (c) => {
 
   server.accept();
 
-  server.addEventListener('message', (e) => {
-    console.log({message_data: e.data})
-  })
+  // we can hide in here, but only for ~30 seconds...
+  c.executionCtx.waitUntil((async () => {
+    while(true) {
+      await sleep(500)
+      try {
+        server.send("message")
+      } catch(e) {
+        console.log({e})
+        continue;
+      }
+      break;
+    }
+    console.log("sent message")
+    await sleep(30_000)
+    console.log("closing connection")
+    server.close();
+  })())
 
   return new Response(null, {
     status: 101,
