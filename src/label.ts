@@ -16,13 +16,12 @@ const enLocaleName = ({ city, iso }: { city: string, iso: string }) => {
 
 const enLocaleDesc = ({ city, iso }: { city: string, iso: string }) => `located in ${city}, ${iso}`
 
-const numberRegex = /\d+/g
 const encoder = new AlphanumericEncoder();
 
 const normalize = (str: string) =>
-  str.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+  str.normalize("NFKD").replace(/\p{Diacritic}/gu, "").replace(/[^A-Za-z-]/g, "").toLowerCase()
 
-export const identifier = ({ city, iso }: { city: string, iso: string }) => normalize(`${iso}-${city}`.replaceAll(numberRegex, n =>
+export const identifier = ({ city, iso }: { city: string, iso: string }) => normalize(`${iso}-${city}`.replaceAll(/\d+/g, n =>
   (encoder.encode(parseInt(n) + 1) ?? 'nan')
 ))
 

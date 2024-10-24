@@ -41,4 +41,10 @@ describe('label identifier', () => {
   it("should handle diacritics", () => {
     expect(identifier({city: "woèﬁ", iso: "US-CA"})).toEqual('us-ca-woefi')
   })
+  it("should handle spaces", () => {
+    expect(identifier({city: "ci ty", iso: "US-CA"})).toEqual('us-ca-city')
+  })
+  it("should handle symbols", () => {
+    expect(identifier({city: "city!@#$%^&*() named thing", iso: "US-CA"})).toEqual('us-ca-citynamedthing')
+  })
 })
