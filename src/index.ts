@@ -5,7 +5,7 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { createLabel, recordLabel } from "./atproto";
+import { createLabel, defineLabel, recordLabel } from "./atproto";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -100,10 +100,16 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
   })
 })
 app.post('/evil-test', async (c) => {
-  await recordLabel(c.env, createLabel("TODO", {
-    val: "test",
-    uri: "uri",
-  }))
+  // await recordLabel(c.env, createLabel("TODO", {
+  //   val: "test",
+  //   uri: "uri",
+  // }))
+
+  await defineLabel(c.env.DB, {
+    identifier: 'test-two',
+    en_locale_name: 'Test',
+    en_locale_desc: 'a test'
+  })
 
   c.status(200)
 })

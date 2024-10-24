@@ -1,4 +1,7 @@
-import { labelIsSigned,  signLabel,  UnsignedLabel } from "@skyware/labeler";
+import { labelIsSigned, signLabel, UnsignedLabel } from "@skyware/labeler";
+import {
+  ComAtprotoLabelDefs,
+} from "@atcute/client/lexicons";
 import { nulled } from "./util";
 
 // export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
@@ -41,6 +44,25 @@ import { nulled } from "./util";
 //     }
 //   }
 // }
+
+export const defineLabel = async (DB: Env['DB'], definition: { identifier: string, en_locale_name: string, en_locale_desc: string }): bool => {
+  const stmt = DB.prepare(`
+    INSERT INTO label_definitions (identifier, en_locale_name, en_locale_desc)
+    VALUES (?, ?, ?)
+  `)
+
+  const { identifier, en_locale_name, en_locale_desc } = definition
+  try {
+    const result_identifier = await stmt.bind(identifier, en_locale_name, en_locale_desc).first('identifier')
+  } catch(e: any) {
+    if (typeof e?.message === 'string' && e?.message.includes('SQLITE_CONSTRAINT')) {
+      return false
+    }
+    throw e
+  }
+  console.log("inserted", definition)
+  return true
+}
 
 
 export const recordLabel = async (env: Env, label: UnsignedLabel) => {
