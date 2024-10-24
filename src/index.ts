@@ -5,7 +5,7 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { createLabel, defineLabel, recordLabel } from "./atproto";
+import { createLabel,  ensureLabelExists,  recordLabel } from "./atproto";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -105,10 +105,10 @@ app.post('/evil-test', async (c) => {
   //   uri: "uri",
   // }))
 
-  await defineLabel(c.env.DB, {
-    identifier: 'test-two',
-    en_locale_name: 'Test',
-    en_locale_desc: 'a test'
+  await ensureLabelExists(c.env, {
+    identifier: "test-three",
+    en_locale_name: 'test 3',
+    en_locale_desc: 'the third test!'
   })
 
   c.status(200)

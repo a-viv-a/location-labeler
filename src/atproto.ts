@@ -3,6 +3,7 @@ import {
   ComAtprotoLabelDefs,
 } from "@atcute/client/lexicons";
 import { nulled } from "./util";
+import { declareLabeler } from "@skyware/labeler/scripts";
 
 // export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
 //   if (!Number.isNaN(cursor)) {
@@ -45,7 +46,8 @@ import { nulled } from "./util";
 //   }
 // }
 
-export const defineLabel = async (DB: Env['DB'], definition: { identifier: string, en_locale_name: string, en_locale_desc: string }): bool => {
+export type LabelDefinition = { identifier: string, en_locale_name: string, en_locale_desc: string }
+const defineLabel = async (DB: Env['DB'], definition: LabelDefinition) => {
   const stmt = DB.prepare(`
     INSERT INTO label_definitions (identifier, en_locale_name, en_locale_desc)
     VALUES (?, ?, ?)
@@ -54,7 +56,7 @@ export const defineLabel = async (DB: Env['DB'], definition: { identifier: strin
   const { identifier, en_locale_name, en_locale_desc } = definition
   try {
     const result_identifier = await stmt.bind(identifier, en_locale_name, en_locale_desc).first('identifier')
-  } catch(e: any) {
+  } catch (e: any) {
     if (typeof e?.message === 'string' && e?.message.includes('SQLITE_CONSTRAINT')) {
       return false
     }
@@ -64,6 +66,38 @@ export const defineLabel = async (DB: Env['DB'], definition: { identifier: strin
   return true
 }
 
+const readLabelDefinitions = async (DB: Env['DB']): Promise<ComAtprotoLabelDefs.LabelValueDefinition[]> => {
+  const stmt = DB.prepare(`
+      SELECT * from label_definitions
+    `)
+
+  const queryResult = await stmt.all<LabelDefinition>()
+
+  if (!queryResult.success) {
+    throw new Error('query failed!')
+  }
+
+  return queryResult.results.map(d => ({
+    blurs: 'none',
+    severity: 'inform', // TODO: review
+    identifier: d.identifier,
+    locales: [{
+      lang: 'EN',
+      name: d.en_locale_name,
+      description: d.en_locale_desc
+    }]
+  }))
+}
+
+export const ensureLabelExists = async (env: Env, definition: LabelDefinition) => {
+  if (await defineLabel(env.DB, definition)) {
+    const defns = await readLabelDefinitions(env.DB)
+    await declareLabeler({
+      identifier: env.IDENTIFIER,
+      password: env.PASSWORD
+    }, defns, true)
+  }
+}
 
 export const recordLabel = async (env: Env, label: UnsignedLabel) => {
   const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
