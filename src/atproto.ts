@@ -157,9 +157,18 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
 
   const new_labels = [
     ...active_labels.results
-      .map(l => ({ ...l, neg: true })),
+      .map(l => ({
+        ...l,
+        // negate the active labels
+        neg: true,
+        // set a new time
+        cts: new Date().toISOString()
+      })),
     label
-  ].map(l => signLabel(l, env.LABEL_SIGNING_KEY))
+  ].map(l =>
+    // the reason we can't do this all in one transaction is because we need to sign the dependent labels
+    signLabel(l, env.LABEL_SIGNING_KEY)
+  )
 
   const written = await env.DB.batch<SignedLabel>(new_labels.map(l => buildRecordStmt(env.DB, l)))
   for (const write of written) {
