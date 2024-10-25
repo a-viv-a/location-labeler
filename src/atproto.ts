@@ -167,6 +167,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
     label
   ].map(l =>
     // the reason we can't do this all in one transaction is because we need to sign the dependent labels
+    // @ts-expect-error type for this fn is wrong in cf worker environment, it is string!
     signLabel(l, env.LABEL_SIGNING_KEY)
   )
 
