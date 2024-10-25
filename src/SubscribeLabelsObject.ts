@@ -77,19 +77,18 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     }
   }
 
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
-    // Upon receiving a message from the client, reply with the same message,
-    // but will prefix the message with "[Durable Object]: " and return the
-    // total number of connections.
-    ws.send(`[Durable Object] message: ${message}, connections: ${this.ctx.getWebSockets().length}`);
-  }
+  // async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+  //   // Upon receiving a message from the client, reply with the same message,
+  //   // but will prefix the message with "[Durable Object]: " and return the
+  //   // total number of connections.
+  //   ws.send(`[Durable Object] message: ${message}, connections: ${this.ctx.getWebSockets().length}`);
+  // }
 
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    // If the client closes the connection, the runtime will invoke the webSocketClose() handler.
-    ws.close(code, "Durable Object is closing WebSocket");
-  }
+  // async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
+  //   // If the client closes the connection, the runtime will invoke the webSocketClose() handler.
+  //   ws.close(code, "Durable Object is closing WebSocket");
+  // }
 
-  
   private announceError(ws: WebSocket, error: string, message: string) {
     console.error({ error, message })
     const errorBytes = frameToBytes("error", {
@@ -116,44 +115,4 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   }
 
 }
-
-// app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
-//   console.log({
-//     route: '/xrpc/com.atproto.label.subscribeLabels',
-//     queries: c.req.queries()
-//   })
-//   const upgradeHeader = c.req.header('Upgrade')
-//   if (!upgradeHeader || upgradeHeader != 'websocket') {
-//     c.status(426)
-//     return c.text('Expected Upgrade: websocket')
-//   }
-
-//   const wsPair = new WebSocketPair();
-//   const [client, server] = Object.values(wsPair);
-
-//   server.accept();
-
-//   // we can hide in here, but only for ~30 seconds...
-//   c.executionCtx.waitUntil((async () => {
-//     // while(true) {
-//     //   await sleep(500)
-//     //   try {
-//     //     server.send("message")
-//     //   } catch(e) {
-//     //     console.log({e})
-//     //     continue;
-//     //   }
-//     //   break;
-//     // }
-//     console.log("sent message")
-//     await sleep(30_000)
-//     console.log("closing connection")
-//     server.close();
-//   })())
-
-//   return new Response(null, {
-//     status: 101,
-//     webSocket: client
-//   })
-// })
 

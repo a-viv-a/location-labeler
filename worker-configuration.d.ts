@@ -5,5 +5,7 @@ interface Env {
 	IDENTIFIER: string;
 	PASSWORD: string;
 	LABELER_DID: string;
+	SECRET_TMP_TOKEN: string;
+	SUBSCRIBE_LABELS_OBJECT: DurableObjectNamespace /* SubscribeLabelsObject */;
 	DB: D1Database;
 }

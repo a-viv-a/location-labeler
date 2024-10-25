@@ -5,8 +5,8 @@ import {
 } from "@turf/turf";
 import { prepareLabel, ensureLabelExists, signAndRecordLabel } from "./atproto";
 import { build_label_definition as buildLabelDefinition } from "./label";
-import { sleep } from "./util";
 import { Place } from "./types";
+import SubscribeLabelsObject from "./SubscribeLabelsObject";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -21,21 +21,38 @@ const app = new Hono<{
 
 
 app.get('/', (c) => c.text("hiiiiii"))
-app.post('/evil-test', async (c) => {
-  await ensureLabelExists(c.env, {
-    identifier: "test-three",
-    en_locale_name: 'test 3',
-    en_locale_desc: 'the third test!'
-  })
 
-  c.status(200)
+
+app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
+  console.log({
+    route: '/xrpc/com.atproto.label.subscribeLabels',
+    queries: c.req.queries()
+  })
+  const upgradeHeader = c.req.header('Upgrade')
+  if (!upgradeHeader || upgradeHeader != 'websocket') {
+    c.status(426)
+    return c.text('Expected Upgrade: websocket')
+  }
+
+  let id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
+  let stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
+
+  return stub.fetch(c.req.raw)
 })
+
+
 app.post('/request-label', async (c) => {
   const token = c.req.header('Token')
 
   if (token == undefined || token.length == 0) {
     c.status(401)
     return c.json({ msg: "missing Token header" })
+  }
+
+  // TODO: replace with actual auth
+  if (token !== c.env.SECRET_TMP_TOKEN) {
+    c.status(500)
+    return c.text('not ready yet...')
   }
 
   const latitude_string = c.req.query('lat')
@@ -96,3 +113,4 @@ app.post('/request-label', async (c) => {
 })
 
 export default app;
+export { SubscribeLabelsObject }
