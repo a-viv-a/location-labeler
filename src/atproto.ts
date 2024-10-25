@@ -109,54 +109,67 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 // }
 
 
-export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel[]> => {
-  const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
-
+const buildRecordStmt = (DB: Env['DB'], signed: SignedLabel): ReturnType<Env['DB']['prepare']> => {
   const { src, uri, cid, val, neg, cts, exp, sig } = signed;
+  return DB.prepare(`
+		INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
+}
 
-  if (neg) {
+export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel[]> => {
+  // const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
+
+  if (labelIsSigned(label)) {
+    throw new Error("label should not be signed")
+  }
+
+  if (label.neg) {
     throw new Error("Negation isn't supported by queries yet. Labels are automatically negated")
   }
 
-  // get any active labels on this uri and insert negations for them
-  // this is only safe inside a transaction!!
-  const negateOldLabelsStmt = env.DB.prepare(`
-    WITH old_labels AS (
-      DELETE FROM labels
+  // get active labels on this uri
+  // this is summoning a TOCTOU bug but I don't see a way around this
+  // we can't sign labels inside a query...
+  // TODO: explore locking?
+  const active_labels = await env.DB.prepare(`
+    WITH active_labels AS (
+      SELECT src, uri, cid, val, neg, MAX(cts) as cts, exp, sig FROM labels
         WHERE uri=?
-        AND (neg IS NULL OR neg = false)
-      RETURNING *
+        GROUP BY val
     )
 
-    INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
-      SELECT src, uri, cid, val, true, cts, exp, sig
-      FROM old_labels
-      RETURNING *;
-    `).bind(uri)
+    SELECT src, uri, cid, val, neg, cts, exp FROM active_labels
+      WHERE (
+        neg IS NULL
+        OR neg = false
+      )
+    `).bind(label.uri).all<UnsignedLabel>()
+  if (!active_labels.success) {
+    throw new Error("failed to find active labels")
+  }
 
-  // drop a negation for this val (identifier) if it exists
-  const dropNegationStmt = env.DB.prepare(`
-      DELETE FROM labels
-        WHERE uri=?
-        AND vaw=?
-        AND neg = true
-    `).bind(uri, val)
-  
-  const insertStmt = env.DB.prepare(`
-		INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		RETURNING src, uri, cid, val, neg, cts, exp, sig
-	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
+  if (active_labels.results.find(l => l.val === label.val) != undefined) {
+    console.log(active_labels.results)
+    console.log("label already applied!")
+    return []
+  }
 
-  const written = await env.DB.batch<SignedLabel>([
-    negateOldLabelsStmt,
-    dropNegationStmt,
-    insertStmt
-  ])
-  console.log({ written })
-  if (written == null) throw new Error("Failed to insert label");
+  const new_labels = [
+    ...active_labels.results
+      .map(l => ({ ...l, neg: true })),
+    label
+  ].map(l => signLabel(l, env.LABEL_SIGNING_KEY))
 
-  return written.flatMap(s => s.results);
+  const written = await env.DB.batch<SignedLabel>(new_labels.map(l => buildRecordStmt(env.DB, l)))
+  for (const write of written) {
+    console.log(write)
+  }
+  if (written == null || !written.reduce((success, write) => success && write.success, true)) {
+    throw new Error("Failed to insert label");
+  }
+
+  return new_labels;
 }
 
 export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
