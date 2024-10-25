@@ -34,7 +34,7 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
     return c.text('Expected Upgrade: websocket')
   }
 
-  let id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
+  let id = c.env.SUBSCRIBE_LABELS_OBJECT.newUniqueId()
   let stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
 
   return stub.fetch(c.req.raw)
@@ -106,7 +106,12 @@ app.post('/request-label', async (c) => {
     target: 'plc:jx4g6baqkwdlonylsetvpu7c',
   }, labelDefinition)
 
-  const signedLabel = await signAndRecordLabel(c.env, unsignedLabel)
+  const signedLabels = await signAndRecordLabel(c.env, unsignedLabel)
+  
+  const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
+  const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
+
+  await stub.announceLabels(signedLabels)
   
   c.status(200)
   return c.json({ labelDefinition, estimatedDistanceMiles })

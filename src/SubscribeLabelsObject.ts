@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { SequencedLabel } from "./types";
+import { IndexedLabel } from "./types";
 import { frameToBytes } from "./util";
 import { formatLabel } from "@skyware/labeler";
 import { sendLabels } from "./atproto";
@@ -99,7 +99,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     ws.close();
   }
 
-  private announceLabelForWs(ws: WebSocket, { seq, label}: SequencedLabel) {
+  private announceLabelForWs(ws: WebSocket, { seq, label}: IndexedLabel) {
     const bytes = frameToBytes(
       "message",
       { seq, labels: [formatLabel(label)] },
@@ -108,9 +108,11 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     ws.send(bytes);
   }
 
-  async announceLabel(label: SequencedLabel) {
+  async announceLabels(labels: IndexedLabel[]) {
     for (const ws of this.ctx.getWebSockets()) {
-      this.announceLabelForWs(ws, label)
+      for (const label of labels) {
+        this.announceLabelForWs(ws, label)
+      }
     }
   }
 

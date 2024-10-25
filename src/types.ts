@@ -38,7 +38,4 @@ export type LabelDefinition = {
   en_locale_desc: string
 }
 
-export type SequencedLabel = {
-  seq: number,
-  label: SignedLabel
-}
+export type IndexedLabel = SignedLabel & { id: number }

@@ -4,7 +4,7 @@ import {
 } from "@atcute/client/lexicons";
 import { frameToBytes, iter_prepared, nulled, sleep } from "./util";
 import { declareLabeler } from "@skyware/labeler/scripts";
-import { LabelDefinition, SequencedLabel } from "./types";
+import { LabelDefinition, IndexedLabel } from "./types";
 
 
 // dynamic labels
@@ -70,7 +70,7 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 export const sendLabels = async (
   cursor: number,
   env: Env,
-  announceLabel: (label: SequencedLabel) => void,
+  announceLabel: (label: IndexedLabel) => void,
   onError: (error: string, message: string) => void
 ) => {
   if (Number.isNaN(cursor)) {
@@ -96,13 +96,12 @@ export const sendLabels = async (
 		`);
 
   try {
-    for await (const [seq, label] of iter_prepared<SignedLabel>(
+    for await (const [_id, label] of iter_prepared<IndexedLabel>(
       ({ i: id, batch }) => stmt.bind(id, batch),
       cursor,
       10
     )) {
-      const sequencedLabel = { seq, label }
-      announceLabel(sequencedLabel)
+      announceLabel(label)
     }
   } catch (e) {
     console.error(e);
@@ -122,10 +121,11 @@ const buildRecordStmt = (DB: Env['DB'], signed: SignedLabel): ReturnType<Env['DB
   return DB.prepare(`
 		INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		RETURNING *
 	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
 }
 
-export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel[]> => {
+export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<IndexedLabel[]> => {
   // const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
 
   if (labelIsSigned(label)) {
@@ -179,7 +179,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
     signLabel(l, env.LABEL_SIGNING_KEY)
   )
 
-  const written = await env.DB.batch<SignedLabel>(new_labels.map(l => buildRecordStmt(env.DB, l)))
+  const written = await env.DB.batch<SignedLabel & {id: number}>(new_labels.map(l => buildRecordStmt(env.DB, l)))
   for (const write of written) {
     console.log(write)
   }
@@ -187,7 +187,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
     throw new Error("Failed to insert label");
   }
 
-  return new_labels;
+  return written.flatMap(write => write.results);
 }
 
 export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
