@@ -48,3 +48,7 @@ describe('label identifier', () => {
     expect(identifier({city: 'city!@#$%^&*() named thing', 'ISO3166-2-lvl4': 'US-CA'})).toEqual('us-ca-citynamedthing')
   })
 })
+
+// describe('build label', () => {
+//   it('should match expected output for ')
+// })

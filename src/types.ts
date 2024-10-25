@@ -7,7 +7,8 @@ export type Place = {
   "boundingbox": [string, string, string, string],
   "lat": string,
   "lon": string,
-  "addresstype": "city" | "town" | "village",
+  "addresstype": "municipality" | "city" | "town" | "village",
+  "name": string,
   // London, Greater London, England, SW1A 2DU, United Kingdom
   "display_name": string,
   "category": string,
