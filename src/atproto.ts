@@ -109,21 +109,54 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 // }
 
 
-export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel> => {
+export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel[]> => {
   const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
 
-  const stmt = env.DB.prepare(`
+  const { src, uri, cid, val, neg, cts, exp, sig } = signed;
+
+  if (neg) {
+    throw new Error("Negation isn't supported by queries yet. Labels are automatically negated")
+  }
+
+  // get any active labels on this uri and insert negations for them
+  // this is only safe inside a transaction!!
+  const negateOldLabelsStmt = env.DB.prepare(`
+    WITH old_labels AS (
+      DELETE FROM labels
+        WHERE uri=?
+        AND (neg IS NULL OR neg = false)
+      RETURNING *
+    )
+
+    INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
+      SELECT src, uri, cid, val, true, cts, exp, sig
+      FROM old_labels
+      RETURNING *;
+    `).bind(uri)
+
+  // drop a negation for this val (identifier) if it exists
+  const dropNegationStmt = env.DB.prepare(`
+      DELETE FROM labels
+        WHERE uri=?
+        AND vaw=?
+        AND neg = true
+    `).bind(uri, val)
+  
+  const insertStmt = env.DB.prepare(`
 		INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		RETURNING src, uri, cid, val, neg, cts, exp, sig
-	`);
+	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
 
-  const { src, uri, cid, val, neg, cts, exp, sig } = signed;
-  const result = await stmt.bind(...nulled(src, uri, cid, val, neg == true ? true : null, cts, exp, sig)).first<UnsignedLabel>()
-  console.log({ result })
-  if (result == null) throw new Error("Failed to insert label");
+  const written = await env.DB.batch<SignedLabel>([
+    negateOldLabelsStmt,
+    dropNegationStmt,
+    insertStmt
+  ])
+  console.log({ written })
+  if (written == null) throw new Error("Failed to insert label");
 
-  return signed;
+  return written.flatMap(s => s.results);
 }
 
 export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
