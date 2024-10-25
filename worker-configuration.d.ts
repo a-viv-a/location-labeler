@@ -4,5 +4,6 @@ interface Env {
 	LABEL_SIGNING_KEY: string;
 	IDENTIFIER: string;
 	PASSWORD: string;
+	LABELER_DID: string;
 	DB: D1Database;
 }

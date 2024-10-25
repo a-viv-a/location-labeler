@@ -3,7 +3,7 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { createLabel, ensureLabelExists, recordLabel } from "./atproto";
+import { prepareLabel, ensureLabelExists, signAndRecordLabel } from "./atproto";
 import { build_label_definition as buildLabelDefinition } from "./label";
 import { sleep } from "./util";
 import { Place } from "./types";
@@ -21,45 +21,6 @@ const app = new Hono<{
 
 
 app.get('/', (c) => c.text("hiiiiii"))
-app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
-  console.log({
-    route: '/xrpc/com.atproto.label.subscribeLabels',
-    queries: c.req.queries()
-  })
-  const upgradeHeader = c.req.header('Upgrade')
-  if (!upgradeHeader || upgradeHeader != 'websocket') {
-    c.status(426)
-    return c.text('Expected Upgrade: websocket')
-  }
-
-  const wsPair = new WebSocketPair();
-  const [client, server] = Object.values(wsPair);
-
-  server.accept();
-
-  // we can hide in here, but only for ~30 seconds...
-  c.executionCtx.waitUntil((async () => {
-    // while(true) {
-    //   await sleep(500)
-    //   try {
-    //     server.send("message")
-    //   } catch(e) {
-    //     console.log({e})
-    //     continue;
-    //   }
-    //   break;
-    // }
-    console.log("sent message")
-    await sleep(30_000)
-    console.log("closing connection")
-    server.close();
-  })())
-
-  return new Response(null, {
-    status: 101,
-    webSocket: client
-  })
-})
 app.post('/evil-test', async (c) => {
   await ensureLabelExists(c.env, {
     identifier: "test-three",
@@ -121,6 +82,15 @@ app.post('/request-label', async (c) => {
   console.log(place)
   const labelDefinition = buildLabelDefinition(place)
   await ensureLabelExists(c.env, labelDefinition)
+
+  const unsignedLabel = prepareLabel({
+    src: c.env.LABELER_DID,
+    // aviva.gay
+    target: 'plc:jx4g6baqkwdlonylsetvpu7c',
+  }, labelDefinition)
+
+  const signedLabel = await signAndRecordLabel(c.env, unsignedLabel)
+  
   c.status(200)
   return c.json({ labelDefinition, estimatedDistanceMiles })
 })

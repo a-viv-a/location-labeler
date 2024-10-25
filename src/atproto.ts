@@ -1,10 +1,71 @@
-import { labelIsSigned, signLabel, UnsignedLabel } from "@skyware/labeler";
+import { labelIsSigned, SignedLabel, signLabel, UnsignedLabel } from "@skyware/labeler";
 import {
   ComAtprotoLabelDefs,
 } from "@atcute/client/lexicons";
 import { nulled } from "./util";
 import { declareLabeler } from "@skyware/labeler/scripts";
 import { LabelDefinition } from "./types";
+
+
+// dynamic labels
+
+export const ensureLabelExists = async (env: Env, definition: LabelDefinition) => {
+  if (await defineLabel(env.DB, definition)) {
+    const defns = await readLabelDefinitions(env.DB)
+    await declareLabeler({
+      identifier: env.IDENTIFIER,
+      password: env.PASSWORD
+    }, defns, true)
+  }
+}
+
+const defineLabel = async (DB: Env['DB'], definition: LabelDefinition) => {
+  const stmt = DB.prepare(`
+    INSERT INTO label_definitions (identifier, en_locale_name, en_locale_desc)
+    VALUES (?, ?, ?)
+  `)
+
+  const { identifier, en_locale_name, en_locale_desc } = definition
+  try {
+    const result_identifier = await stmt.bind(identifier, en_locale_name, en_locale_desc).first('identifier')
+  } catch (e: any) {
+    if (typeof e?.message === 'string' && e?.message.includes('SQLITE_CONSTRAINT')) {
+      return false
+    }
+    throw e
+  }
+  console.log("inserted", definition)
+  return true
+}
+
+const readLabelDefinitions = async (DB: Env['DB']): Promise<ComAtprotoLabelDefs.LabelValueDefinition[]> => {
+  const stmt = DB.prepare(`
+      SELECT * from label_definitions
+    `)
+
+  const queryResult = await stmt.all<LabelDefinition>()
+
+  if (!queryResult.success) {
+    throw new Error('query failed!')
+  }
+
+  return queryResult.results.map(d => ({
+    blurs: 'none',
+    severity: 'inform', // TODO: review
+    identifier: d.identifier,
+    locales: buildLocales(d)
+  }))
+}
+
+const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDefinitionStrings[] => [
+  {
+    lang: 'en',
+    name: label.en_locale_name,
+    description: label.en_locale_desc
+  }]
+
+
+// label publishing
 
 // export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
 //   if (!Number.isNaN(cursor)) {
@@ -47,82 +108,31 @@ import { LabelDefinition } from "./types";
 //   }
 // }
 
-const defineLabel = async (DB: Env['DB'], definition: LabelDefinition) => {
-  const stmt = DB.prepare(`
-    INSERT INTO label_definitions (identifier, en_locale_name, en_locale_desc)
-    VALUES (?, ?, ?)
-  `)
 
-  const { identifier, en_locale_name, en_locale_desc } = definition
-  try {
-    const result_identifier = await stmt.bind(identifier, en_locale_name, en_locale_desc).first('identifier')
-  } catch (e: any) {
-    if (typeof e?.message === 'string' && e?.message.includes('SQLITE_CONSTRAINT')) {
-      return false
-    }
-    throw e
-  }
-  console.log("inserted", definition)
-  return true
-}
-
-const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDefinitionStrings[] => [
-   {
-    lang: 'en',
-    name: label.en_locale_name,
-    description: label.en_locale_desc
-  }]
-
-
-const readLabelDefinitions = async (DB: Env['DB']): Promise<ComAtprotoLabelDefs.LabelValueDefinition[]> => {
-  const stmt = DB.prepare(`
-      SELECT * from label_definitions
-    `)
-
-  const queryResult = await stmt.all<LabelDefinition>()
-
-  if (!queryResult.success) {
-    throw new Error('query failed!')
-  }
-
-  return queryResult.results.map(d => ({
-    blurs: 'none',
-    severity: 'inform', // TODO: review
-    identifier: d.identifier,
-    locales: buildLocales(d)
-  }))
-}
-
-export const ensureLabelExists = async (env: Env, definition: LabelDefinition) => {
-  if (await defineLabel(env.DB, definition)) {
-    const defns = await readLabelDefinitions(env.DB)
-    await declareLabeler({
-      identifier: env.IDENTIFIER,
-      password: env.PASSWORD
-    }, defns, true)
-  }
-}
-
-export const recordLabel = async (env: Env, label: UnsignedLabel) => {
+export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<SignedLabel> => {
   const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
 
   const stmt = env.DB.prepare(`
 		INSERT INTO labels (src, uri, cid, val, neg, cts, exp, sig)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		RETURNING src, uri, cid, val, neg, cts, exp, sig
 	`);
 
   const { src, uri, cid, val, neg, cts, exp, sig } = signed;
-  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first<UnsignedLabel & { id: number }>()
+  const result = await stmt.bind(...nulled(src, uri, cid, val, neg == true ? true : null, cts, exp, sig)).first<UnsignedLabel>()
   console.log({ result })
   if (result == null) throw new Error("Failed to insert label");
 
-  return { id: result.id, ...signed };
+  return signed;
 }
 
-export const createLabel = (src_did: string, label: { val: string, uri: string, cid?: string, neg?: true }, date?: Date): UnsignedLabel => (
+export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
   {
-    ...label,
-    src: `did:${src_did}`,
+    val: labelDefinition.identifier,
+    src: `did:${src}`,
+    uri: `did:${target}`,
+    neg,
+    // cid: undefined,
     cts: (date ?? new Date()).toISOString()
   }
 )
