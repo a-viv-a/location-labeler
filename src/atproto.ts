@@ -67,29 +67,15 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 
 // label publishing
 
-export const announceLabel = ({ seq, label }: SequencedLabel, ws: WebSocket) => {
-  const bytes = frameToBytes(
-    "message",
-    { seq, labels: [formatLabel(label)] },
-    "#labels",
-  );
-  ws.send(bytes);
-}
-
-export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
-  const error = (error: string, message: string) => {
-    console.error({ error, message })
-    const errorBytes = frameToBytes("error", {
-      error,
-      message,
-    });
-    ws.send(errorBytes);
-    ws.close();
-  }
-
+export const sendLabels = async (
+  cursor: number,
+  env: Env,
+  announceLabel: (label: SequencedLabel) => void,
+  onError: (error: string, message: string) => void
+) => {
   if (Number.isNaN(cursor)) {
     // TODO: is this legal?
-    error('NaNCursor', "Cursor is NaN")
+    onError('NaNCursor', "Cursor is NaN")
     return
   }
 
@@ -98,7 +84,7 @@ export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
 		`).first<number>("id")
 
   if (cursor > (latest_id ?? 0)) {
-    error("FutureCursor", "Cursor is in the future")
+    onError("FutureCursor", "Cursor is in the future")
     return
   }
 
@@ -116,11 +102,11 @@ export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
       10
     )) {
       const sequencedLabel = { seq, label }
-      announceLabel(sequencedLabel, ws)
+      announceLabel(sequencedLabel)
     }
   } catch (e) {
     console.error(e);
-    error(
+    onError(
       "InternalServerError",
       "An unknown error occurred",
     );
