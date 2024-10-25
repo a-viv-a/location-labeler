@@ -183,6 +183,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
   for (const write of written) {
     console.log(write)
   }
+
   if (written == null || !written.reduce((success, write) => success && write.success, true)) {
     throw new Error("Failed to insert label");
   }
