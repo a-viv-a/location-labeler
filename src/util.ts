@@ -5,3 +5,5 @@ type Nulled<T> = {
 export const nulled = <T extends unknown[]>(...args: T): Nulled<T> =>
   args.map(v => v ?? null) as Nulled<T>
 
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+

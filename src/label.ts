@@ -2,6 +2,7 @@ import { hasFlag } from "country-flag-icons";
 import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import { LabelDefinition } from "./atproto";
 import AlphanumericEncoder from "alphanumeric-encoder";
+import { Place } from "./types";
 
 const enLocaleName = ({ city, iso }: { city: string, iso: string }) => {
   let s = iso.split('-')
@@ -25,7 +26,7 @@ export const identifier = ({ city, iso }: { city: string, iso: string }) => norm
   (encoder.encode(parseInt(n) + 1) ?? 'nan')
 ))
 
-export const build_label_definition = (location: { city: string, iso: string }): LabelDefinition => ({
+export const build_label_definition = (place: Place): LabelDefinition => ({
   en_locale_name: enLocaleName(location),
   en_locale_desc: enLocaleDesc(location),
   identifier: identifier(location)

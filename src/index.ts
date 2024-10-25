@@ -5,6 +5,8 @@ import {
 } from "@turf/turf";
 import { createLabel, ensureLabelExists, recordLabel } from "./atproto";
 import { build_label_definition as buildLabelDefinition } from "./label";
+import { sleep } from "./util";
+import { Place } from "./types";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -16,36 +18,6 @@ import { build_label_definition as buildLabelDefinition } from "./label";
 const app = new Hono<{
   Bindings: Env
 }>();
-
-// https://nominatim.org/release-docs/latest/api/Output/
-type Place = {
-  "place_id": string,
-  "licence": string,
-  "osm_type": string,
-  "osm_id": string,
-  "boundingbox": [string, string, string, string],
-  "lat": string,
-  "lon": string,
-  // London, Greater London, England, SW1A 2DU, United Kingdom
-  "display_name": string,
-  "category": string,
-  "type": string,
-  "importance": number,
-  "place_rank": number,
-  "icon": string,
-  "address": {
-    "city": string,
-    "state_district": string,
-    "state": string,
-    "ISO3166-2-lvl4": string,
-    "postcode": string,
-    "country": string,
-    "country_code": string,
-  },
-};
-
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 
 app.get('/', (c) => c.text("hiiiiii"))
@@ -109,7 +81,7 @@ app.post('/request-label', async (c) => {
   const longitude_string = c.req.query('lon')
   if (latitude_string == undefined || longitude_string == undefined) {
     c.status(400)
-    return c.json({ msg: "invalid / missing lat and long query params" })
+    return c.json({ msg: "invalid / missing lat and lon query params" })
   }
 
 
@@ -132,10 +104,8 @@ app.post('/request-label', async (c) => {
   // turf is lon, lat
   const param_point = point([longitude, latitude])
   const cf_point = point([cf_longitude, cf_latitude])
-  const estimated_distance_miles = distance(param_point, cf_point, { units: 'miles' });
-  console.log({
-    estimated_distance_miles
-  })
+  const estimatedDistanceMiles = distance(param_point, cf_point, { units: 'miles' });
+  console.log({ estimatedDistanceMiles })
 
   const headers = new Headers({
     "User-Agent": "Bluesky Location Labeler"
@@ -148,11 +118,11 @@ app.post('/request-label', async (c) => {
     "method": "GET"
   });
   const place = await resp.json() as Place;
-
-  const labelDefinition = buildLabelDefinition({ city: place.address.city, iso: place.address['ISO3166-2-lvl4'] })
+  console.log(place)
+  const labelDefinition = buildLabelDefinition(place)
   await ensureLabelExists(c.env, labelDefinition)
   c.status(200)
-  return c.json({ labelDefinition, estimated_distance_miles })
+  return c.json({ labelDefinition, estimatedDistanceMiles })
 })
 
 export default app;

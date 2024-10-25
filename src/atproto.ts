@@ -108,14 +108,11 @@ export const recordLabel = async (env: Env, label: UnsignedLabel) => {
 	`);
 
   const { src, uri, cid, val, neg, cts, exp, sig } = signed;
-  // const result = stmt.run(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig);
-  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first()
+  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first<UnsignedLabel & {id:number}>()
   console.log({ result })
-  if (result == null || !result.changes) throw new Error("Failed to insert label");
+  if (result == null) throw new Error("Failed to insert label");
 
-  const id = Number(result.lastInsertRowid);
-
-  return { id, ...signed };
+  return { id: result.id, ...signed };
 }
 
 export const createLabel = (src_did: string, label: { val: string, uri: string, cid?: string, neg?: true }, date?: Date): UnsignedLabel => (
