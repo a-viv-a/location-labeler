@@ -1,8 +1,7 @@
 import { hasFlag } from "country-flag-icons";
 import getUnicodeFlagIcon from 'country-flag-icons/unicode'
-import { LabelDefinition } from "./atproto";
 import AlphanumericEncoder from "alphanumeric-encoder";
-import { Place } from "./types";
+import { LabelDefinition, Place } from "./types";
 
 type CityISO = Pick<Place['address'], 'city' | 'ISO3166-2-lvl4'>;
 

@@ -7,6 +7,7 @@ export type Place = {
   "boundingbox": [string, string, string, string],
   "lat": string,
   "lon": string,
+  "addresstype": "city" | "town" | "village",
   // London, Greater London, England, SW1A 2DU, United Kingdom
   "display_name": string,
   "category": string,
@@ -24,3 +25,13 @@ export type Place = {
     "country_code": string,
   },
 };
+
+export type LabelDefinition = {
+  /** unique identifier for each label */
+  identifier: string,
+  /** english localized name */
+  en_locale_name: string,
+  /** english localized description */
+  en_locale_desc: string
+}
+

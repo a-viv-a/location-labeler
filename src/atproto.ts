@@ -4,6 +4,7 @@ import {
 } from "@atcute/client/lexicons";
 import { nulled } from "./util";
 import { declareLabeler } from "@skyware/labeler/scripts";
+import { LabelDefinition } from "./types";
 
 // export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
 //   if (!Number.isNaN(cursor)) {
@@ -46,7 +47,6 @@ import { declareLabeler } from "@skyware/labeler/scripts";
 //   }
 // }
 
-export type LabelDefinition = { identifier: string, en_locale_name: string, en_locale_desc: string }
 const defineLabel = async (DB: Env['DB'], definition: LabelDefinition) => {
   const stmt = DB.prepare(`
     INSERT INTO label_definitions (identifier, en_locale_name, en_locale_desc)
@@ -66,6 +66,14 @@ const defineLabel = async (DB: Env['DB'], definition: LabelDefinition) => {
   return true
 }
 
+const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDefinitionStrings[] => [
+   {
+    lang: 'en',
+    name: label.en_locale_name,
+    description: label.en_locale_desc
+  }]
+
+
 const readLabelDefinitions = async (DB: Env['DB']): Promise<ComAtprotoLabelDefs.LabelValueDefinition[]> => {
   const stmt = DB.prepare(`
       SELECT * from label_definitions
@@ -81,11 +89,7 @@ const readLabelDefinitions = async (DB: Env['DB']): Promise<ComAtprotoLabelDefs.
     blurs: 'none',
     severity: 'inform', // TODO: review
     identifier: d.identifier,
-    locales: [{
-      lang: 'EN',
-      name: d.en_locale_name,
-      description: d.en_locale_desc
-    }]
+    locales: buildLocales(d)
   }))
 }
 
@@ -108,7 +112,7 @@ export const recordLabel = async (env: Env, label: UnsignedLabel) => {
 	`);
 
   const { src, uri, cid, val, neg, cts, exp, sig } = signed;
-  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first<UnsignedLabel & {id:number}>()
+  const result = await stmt.bind(...nulled(src, uri, cid, val, neg ? 1 : 0, cts, exp, sig)).first<UnsignedLabel & { id: number }>()
   console.log({ result })
   if (result == null) throw new Error("Failed to insert label");
 
