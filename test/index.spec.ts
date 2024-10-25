@@ -30,21 +30,21 @@ import { identifier } from '../src/label'
 
 describe('label identifier', () => {
   it('Should pass normal values through as lowercase', () => {
-    expect(identifier({city: "City", iso: "US-WI"})).toEqual('us-wi-city')
+    expect(identifier({city: 'City', 'ISO3166-2-lvl4': 'US-WI'})).toEqual('us-wi-city')
   })
-  it("should handle a number", () => {
-    expect(identifier({city: "CITY1", iso: "US-CA"})).toEqual("us-ca-cityb")
+  it('should handle a number', () => {
+    expect(identifier({city: 'CITY1', 'ISO3166-2-lvl4': 'US-CA'})).toEqual('us-ca-cityb')
   })
-  it("should multiple numbers", () => {
-    expect(identifier({city: "CITY25", iso: "US3-CA"})).toEqual("usd-ca-cityz")
+  it('should multiple numbers', () => {
+    expect(identifier({city: 'CITY25', 'ISO3166-2-lvl4': 'US3-CA'})).toEqual('usd-ca-cityz')
   })
-  it("should handle diacritics", () => {
-    expect(identifier({city: "woèﬁ", iso: "US-CA"})).toEqual('us-ca-woefi')
+  it('should handle diacritics', () => {
+    expect(identifier({city: 'woèﬁ', 'ISO3166-2-lvl4': 'US-CA'})).toEqual('us-ca-woefi')
   })
-  it("should handle spaces", () => {
-    expect(identifier({city: "ci ty", iso: "US-CA"})).toEqual('us-ca-city')
+  it('should handle spaces', () => {
+    expect(identifier({city: 'ci ty', 'ISO3166-2-lvl4': 'US-CA'})).toEqual('us-ca-city')
   })
-  it("should handle symbols", () => {
-    expect(identifier({city: "city!@#$%^&*() named thing", iso: "US-CA"})).toEqual('us-ca-citynamedthing')
+  it('should handle symbols', () => {
+    expect(identifier({city: 'city!@#$%^&*() named thing', 'ISO3166-2-lvl4': 'US-CA'})).toEqual('us-ca-citynamedthing')
   })
 })

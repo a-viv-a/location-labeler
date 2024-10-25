@@ -24,5 +24,3 @@ export type Place = {
     "country_code": string,
   },
 };
-
-
