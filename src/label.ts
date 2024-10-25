@@ -6,9 +6,9 @@ import { defined } from "./util";
 
 const enLocaleName = ({ name, address: { 'ISO3166-2-lvl4': iso } }: Place) => {
   // TODO: make this not evil?
-  let s = iso.split('-')
-  let country = s[0]
-  let rest = s.slice(1).join('-')
+  const s = iso.split('-')
+  const country = s[0]
+  const rest = s.slice(1).join('-')
   if (!hasFlag(country)) {
     return defined`${name} ${rest} ${country}`
   }
@@ -18,6 +18,16 @@ const enLocaleName = ({ name, address: { 'ISO3166-2-lvl4': iso } }: Place) => {
 
 const enLocaleDesc = ({ display_name }: Pick<Place, 'display_name'>) => defined`${display_name}`
 
+const numericAsAscii = (numeric: string | number) =>
+  numeric.toString().split('').map(c => {
+    const num = parseInt(c)
+    if (Number.isNaN(num)) {
+      throw new Error(`${c} in ${numeric} is not a number`)
+    } else {
+      return String.fromCharCode('a'.charCodeAt(0) + num)
+    }
+  }).join('')
+
 
 /**
 https://nominatim.org/release-docs/latest/api/Output/#place_id-is-not-a-persistent-id
@@ -26,7 +36,7 @@ https://nominatim.org/release-docs/latest/api/Output/#place_id-is-not-a-persiste
 
 class renamed to category...
 */
-export const identifier = (place: Place) => defined`${place.osm_type}-${place.osm_id}-${place.category}`
+export const identifier = (place: Place) => defined`${place.osm_type}-${numericAsAscii(place.osm_id)}-${place.category}`
 
 export const build_label_definition = (place: Place): LabelDefinition => ({
   en_locale_name: enLocaleName(place),
