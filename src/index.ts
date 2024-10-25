@@ -112,7 +112,7 @@ app.post('/request-label', async (c) => {
   })
 
   // https://nominatim.org/release-docs/latest/api/Reverse/
-  const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=10&lat=${latitude}&lon=${longitude}`, {
+  const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?email=aviva@rubenfamily.com&format=jsonv2&addressdetails=1&zoom=10&lat=${latitude}&lon=${longitude}`, {
     "headers": headers,
     "body": null,
     "method": "GET"
