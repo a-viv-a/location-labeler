@@ -1,3 +1,5 @@
+import { SignedLabel } from "@skyware/labeler";
+
 // https://nominatim.org/release-docs/latest/api/Output/
 export type Place = {
   "place_id": string,
@@ -36,3 +38,7 @@ export type LabelDefinition = {
   en_locale_desc: string
 }
 
+export type SequencedLabel = {
+  seq: number,
+  label: SignedLabel
+}

@@ -1,10 +1,10 @@
-import { labelIsSigned, SignedLabel, signLabel, UnsignedLabel } from "@skyware/labeler";
+import { formatLabel, labelIsSigned, SignedLabel, signLabel, UnsignedLabel } from "@skyware/labeler";
 import {
   ComAtprotoLabelDefs,
 } from "@atcute/client/lexicons";
-import { nulled } from "./util";
+import { frameToBytes, iter_prepared, nulled, sleep } from "./util";
 import { declareLabeler } from "@skyware/labeler/scripts";
-import { LabelDefinition } from "./types";
+import { LabelDefinition, SequencedLabel } from "./types";
 
 
 // dynamic labels
@@ -67,46 +67,68 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 
 // label publishing
 
-// export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
-//   if (!Number.isNaN(cursor)) {
-//     const latest = await env.DB.prepare(`
-// 				SELECT MAX(id) AS id FROM labels
-// 			`).run() as any as { id: number };
-//     if (cursor > (latest.id ?? 0)) {
-//       const errorBytes = frameToBytes("error", {
-//         error: "FutureCursor",
-//         message: "Cursor is in the future",
-//       });
-//       ws.send(errorBytes);
-//       ws.terminate();
-//     }
-//     const stmt = env.DB.prepare<[number]>(`
-// 				SELECT * FROM labels
-// 				WHERE id > ?
-// 				ORDER BY id ASC
-// 			`);
+export const announceLabel = ({ seq, label }: SequencedLabel, ws: WebSocket) => {
+  const bytes = frameToBytes(
+    "message",
+    { seq, labels: [formatLabel(label)] },
+    "#labels",
+  );
+  ws.send(bytes);
+}
 
-//     try {
-//       for (const row of stmt.iterate(cursor)) {
-//         const { id: seq, ...label } = row as SavedLabel;
-//         const bytes = frameToBytes(
-//           "message",
-//           { seq, labels: [formatLabel(label)] },
-//           "#labels",
-//         );
-//         ws.send(bytes);
-//       }
-//     } catch (e) {
-//       console.error(e);
-//       const errorBytes = frameToBytes("error", {
-//         error: "InternalServerError",
-//         message: "An unknown error occurred",
-//       });
-//       ws.send(errorBytes);
-//       ws.terminate();
-//     }
-//   }
-// }
+export const sendLabels = async (cursor: number, env: Env, ws: WebSocket) => {
+  const error = (error: string, message: string) => {
+    console.error({ error, message })
+    const errorBytes = frameToBytes("error", {
+      error,
+      message,
+    });
+    ws.send(errorBytes);
+    ws.close();
+  }
+
+  if (Number.isNaN(cursor)) {
+    // TODO: is this legal?
+    error('NaNCursor', "Cursor is NaN")
+    return
+  }
+
+  const latest_id = await env.DB.prepare(`
+			SELECT MAX(id) AS id FROM labels
+		`).first<number>("id")
+
+  if (cursor > (latest_id ?? 0)) {
+    error("FutureCursor", "Cursor is in the future")
+    return
+  }
+
+  const stmt = env.DB.prepare(`
+			SELECT * FROM labels
+  			WHERE id > ?
+  			ORDER BY id ASC
+  			LIMIT ?
+		`);
+
+  try {
+    for await (const [seq, label] of iter_prepared<SignedLabel>(
+      ({ i: id, batch }) => stmt.bind(id, batch),
+      cursor,
+      10
+    )) {
+      const sequencedLabel = { seq, label }
+      announceLabel(sequencedLabel, ws)
+    }
+  } catch (e) {
+    console.error(e);
+    error(
+      "InternalServerError",
+      "An unknown error occurred",
+    );
+    await sleep(500);
+    throw e;
+  }
+
+}
 
 
 const buildRecordStmt = (DB: Env['DB'], signed: SignedLabel): ReturnType<Env['DB']['prepare']> => {
