@@ -95,8 +95,12 @@ app.post('/request-label', async (c) => {
     "body": null,
     "method": "GET"
   });
-  const place = await resp.json() as Place;
+  const place = await resp.json() as Place | {error: string};
   console.log(place)
+  if ('error' in place) {
+    c.status(400)
+    return c.json({ msg: place.error })
+  }
   const labelDefinition = buildLabelDefinition(place)
   await ensureLabelExists(c.env, labelDefinition)
 

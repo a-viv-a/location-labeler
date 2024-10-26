@@ -34,14 +34,16 @@ export async function* iter_prepared<Y = never>(bind: (_: { i: number, batch: nu
 
   let consumed = false
   for (let i = initial; ; i++) {
-    const result = results.pop()
+    // TODO: explore a "ptr" style optimization? likely unneeded
+    const result = results.shift()
     if (result != undefined) {
       yield [i, result] as const
       continue
     }
 
     if (consumed) { break }
-
+   
+    // TODO: swap array instead of push? likely unneeded
     if (results
       .push(
         ...(await bind({ i, batch }).all<Y>()).results

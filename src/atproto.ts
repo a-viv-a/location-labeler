@@ -83,6 +83,8 @@ export const sendLabels = async (
 			SELECT MAX(id) AS id FROM labels
 		`).first<number>("id")
 
+	console.log({ latest_id })
+
   if (cursor > (latest_id ?? 0)) {
     onError("FutureCursor", "Cursor is in the future")
     return
