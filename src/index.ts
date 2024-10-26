@@ -22,6 +22,7 @@ const app = new Hono<{
 
 app.get('/', (c) => c.text("hiiiiii"))
 
+const primaryID = 'primary'
 
 app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
   console.log({
@@ -34,7 +35,7 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
     return c.text('Expected Upgrade: websocket')
   }
 
-  let id = c.env.SUBSCRIBE_LABELS_OBJECT.newUniqueId()
+  let id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
   let stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
 
   return stub.fetch(c.req.raw)
@@ -114,7 +115,7 @@ app.post('/request-label', async (c) => {
 
   // TODO: check how many labels are returned
 
-  const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
+  const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
   const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
 
   const { fanned, ws_count } = await stub.announceLabels(signedLabels)

@@ -108,7 +108,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
 
   private announceLabelForWs(ws: WebSocket, { id, ...label }: IndexedLabel) {
     // this is really noisy...
-    console.log({ msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts })
+    // console.log({ msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts })
     const bytes = frameToBytes(
       "message",
       // try and ensure at the boundery that label sig is correctly typed
