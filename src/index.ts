@@ -118,8 +118,7 @@ app.post('/request-label', async (c) => {
   const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
   const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
 
-  const { fanned, ws_count } = await stub.announceLabels(signedLabels)
-  console.log(`fanned out to ${ws_count} ws, ${fanned} ws+label combinations`)
+  await stub.announceLabels(signedLabels)
 
   c.status(200)
   return c.json({ labelDefinition, estimatedDistanceMiles })
