@@ -111,6 +111,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   }
 
   async announceLabels(labels: IndexedLabel[]) {
+    console.log("announcing", labels)
     for (const ws of this.ctx.getWebSockets()) {
       for (const label of labels) {
         this.announceLabelForWs(ws, label)
