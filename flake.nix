@@ -25,6 +25,13 @@
               just
               typescript-language-server
             ];
+
+            shellHook = ''
+              export LATLON_SF='lat=37.773972?lon=-122.431297'
+              export LATLON_MAD='lat=43.073051?lon=-89.401230'
+              export LATLON_FITCH_WI='lat=43.002316?lon=-89.424095'
+              export LATLON_FITCH_MA='lat=42.586716?lon=-71.814468'
+            '';
           };
       }
     );

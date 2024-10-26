@@ -54,7 +54,8 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     // (run the `constructor`) and deliver the message to the appropriate handler.
     this.ctx.acceptWebSocket(server);
 
-    const cursor = parseInt(new URLSearchParams(request.url).get('cursor') ?? '0')
+    const url = URL.parse(request.url)
+    const cursor = parseInt(url?.searchParams.get('cursor') ?? '0')
 
     // respond to this request in a second
     this.newSubscriptions.push({
@@ -85,10 +86,15 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   //   ws.send(`[Durable Object] message: ${message}, connections: ${this.ctx.getWebSockets().length}`);
   // }
 
-  // async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-  //   // If the client closes the connection, the runtime will invoke the webSocketClose() handler.
-  //   ws.close(code, "Durable Object is closing WebSocket");
-  // }
+  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
+    // If the client closes the connection, the runtime will invoke the webSocketClose() handler.
+    ws.close(code, "Durable Object is closing WebSocket");
+    console.log(`closed websocket with code ${code}`)
+  }
+
+  async webSocketError(ws: WebSocket, error: unknown) {
+      console.log(`websocket error ${error}`)
+  }
 
   private announceError(ws: WebSocket, error: string, message: string) {
     console.error({ error, message })
@@ -102,7 +108,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
 
   private announceLabelForWs(ws: WebSocket, { id, ...label}: IndexedLabel) {
     // this is really noisy...
-    // console.log({msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts})
+    console.log({msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts})
     const bytes = frameToBytes(
       "message",
       // try and ensure at the boundery that label sig is correctly typed
@@ -113,13 +119,16 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   }
 
   async announceLabels(labels: IndexedLabel[]) {
-    console.log("announcing", labels)
+    let fanned = 0
+
     for (const ws of this.ctx.getWebSockets()) {
       for (const label of labels) {
         this.announceLabelForWs(ws, label)
+        fanned++
       }
     }
-  }
 
+    return fanned
+  }
 }
 

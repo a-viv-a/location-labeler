@@ -111,11 +111,14 @@ app.post('/request-label', async (c) => {
   }, labelDefinition)
 
   const signedLabels = await signAndRecordLabel(c.env, unsignedLabel)
+
+  // TODO: check how many labels are returned
   
   const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
   const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
 
-  await stub.announceLabels(signedLabels)
+  const fanned = await stub.announceLabels(signedLabels)
+  console.log(`fanned out to ${fanned} ws+label combinations`)
   
   c.status(200)
   return c.json({ labelDefinition, estimatedDistanceMiles })

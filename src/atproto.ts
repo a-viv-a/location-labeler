@@ -160,8 +160,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
   }
 
   if (active_labels.results.find(l => l.val === label.val) != undefined) {
-    console.log(active_labels.results)
-    console.log("label already applied!")
+    console.log("label already applied!", active_labels.results)
     return []
   }
 
@@ -182,15 +181,14 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
   )
 
   const written = await env.DB.batch<SignedLabel & {id: number}>(new_labels.map(l => buildRecordStmt(env.DB, l)))
-  for (const write of written) {
-    console.log(write)
-  }
 
   if (written == null || !written.reduce((success, write) => success && write.success, true)) {
     throw new Error("Failed to insert label");
   }
 
-  return written.flatMap(write => write.results);
+  const flatWrites = written.flatMap(write => write.results);
+  console.log("flatWrites", flatWrites)
+  return flatWrites
 }
 
 export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
