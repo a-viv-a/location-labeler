@@ -95,7 +95,7 @@ app.post('/request-label', async (c) => {
     "body": null,
     "method": "GET"
   });
-  const place = await resp.json() as Place | {error: string};
+  const place = await resp.json() as Place | { error: string };
   console.log(place)
   if ('error' in place) {
     c.status(400)
@@ -113,13 +113,13 @@ app.post('/request-label', async (c) => {
   const signedLabels = await signAndRecordLabel(c.env, unsignedLabel)
 
   // TODO: check how many labels are returned
-  
+
   const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName('primary')
   const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
 
-  const fanned = await stub.announceLabels(signedLabels)
-  console.log(`fanned out to ${fanned} ws+label combinations`)
-  
+  const { fanned, ws_count } = await stub.announceLabels(signedLabels)
+  console.log(`fanned out to ${ws_count} ws, ${fanned} ws+label combinations`)
+
   c.status(200)
   return c.json({ labelDefinition, estimatedDistanceMiles })
 })

@@ -71,8 +71,8 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   }
 
   async alarm() {
-    let newSubscription: {ws: WebSocket, cursor: number} | undefined
-    while((newSubscription = this.newSubscriptions.pop()) != undefined) {
+    let newSubscription: { ws: WebSocket, cursor: number } | undefined
+    while ((newSubscription = this.newSubscriptions.pop()) != undefined) {
       const { ws, cursor } = newSubscription
       console.log({ msg: "processing new subscription", cursor })
       sendLabels(cursor, this.env, (l) => this.announceLabelForWs(ws, l), (e, m) => this.announceError(ws, e, m))
@@ -93,7 +93,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
   }
 
   async webSocketError(ws: WebSocket, error: unknown) {
-      console.log(`websocket error ${error}`)
+    console.log(`websocket error ${error}`)
   }
 
   private announceError(ws: WebSocket, error: string, message: string) {
@@ -106,13 +106,13 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     ws.close();
   }
 
-  private announceLabelForWs(ws: WebSocket, { id, ...label}: IndexedLabel) {
+  private announceLabelForWs(ws: WebSocket, { id, ...label }: IndexedLabel) {
     // this is really noisy...
-    console.log({msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts})
+    console.log({ msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts })
     const bytes = frameToBytes(
       "message",
       // try and ensure at the boundery that label sig is correctly typed
-      { seq: id, labels: [formatLabel({...label, sig: new Uint8Array(label.sig)})] },
+      { seq: id, labels: [formatLabel({ ...label, sig: new Uint8Array(label.sig) })] },
       "#labels",
     );
     ws.send(bytes);
@@ -120,15 +120,17 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
 
   async announceLabels(labels: IndexedLabel[]) {
     let fanned = 0
+    let ws_count = 0
 
     for (const ws of this.ctx.getWebSockets()) {
+      ws_count++
       for (const label of labels) {
         this.announceLabelForWs(ws, label)
         fanned++
       }
     }
 
-    return fanned
+    return { fanned, ws_count }
   }
 }
 
