@@ -86,6 +86,11 @@ app.post('/request-label', async (c) => {
   const estimatedDistanceMiles = distance(param_point, cf_point, { units: 'miles' });
   console.log({ estimatedDistanceMiles })
 
+  if (estimatedDistanceMiles > 200) {
+    c.status(400)
+    return c.json({ msg: 'ip estimated distance too far', estimatedDistanceMiles })
+  }
+
   const headers = new Headers({
     "User-Agent": "Bluesky Location Labeler"
   })
