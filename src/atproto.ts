@@ -83,7 +83,7 @@ export const sendLabels = async (
 			SELECT MAX(id) AS id FROM labels
 		`).first<number>("id")
 
-	console.log({ latest_id })
+  console.log({ latest_id })
 
   if (cursor > (latest_id ?? 0)) {
     onError("FutureCursor", "Cursor is in the future")
@@ -180,7 +180,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
     signLabel(l, env.LABEL_SIGNING_KEY)
   )
 
-  const written = await env.DB.batch<SignedLabel & {id: number}>(new_labels.map(l => buildRecordStmt(env.DB, l)))
+  const written = await env.DB.batch<SignedLabel & { id: number }>(new_labels.map(l => buildRecordStmt(env.DB, l)))
 
   if (written == null || !written.reduce((success, write) => success && write.success, true)) {
     throw new Error("Failed to insert label");
@@ -191,8 +191,11 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
   return flatWrites
 }
 
-export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => (
-  {
+export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => {
+  if (src.startsWith('did:') || target.startsWith('did:')) {
+    throw new Error(`src/target should not have the "did:" prepended!`)
+  }
+  return {
     val: labelDefinition.identifier,
     src: `did:${src}`,
     uri: `did:${target}`,
@@ -200,4 +203,4 @@ export const prepareLabel = ({ src, target, date, neg }: { src: string, target: 
     // cid: undefined,
     cts: (date ?? new Date()).toISOString()
   }
-)
+}
