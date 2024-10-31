@@ -33,6 +33,7 @@
               export LATLON_FITCH_WI='lat=43.002316?lon=-89.424095'
               export LATLON_FITCH_MA='lat=42.586716?lon=-71.814468'
               export LATLON_BATMAN='lat=38.0758?lon=41.4043'
+              export LATLON_MAPLE='lat=43.10952?lon=-89.365548'
             '';
           };
       }
