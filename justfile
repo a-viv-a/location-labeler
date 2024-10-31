@@ -4,6 +4,9 @@ dev:
 deploy:
     wrangler deploy
 
+check:
+    tsc --noEmit --watch
+
 d1_cmd COMMAND *FLAGS:
     wrangler d1 execute label-status --command '{{COMMAND}}' --json {{FLAGS}} | bat -l json
 
