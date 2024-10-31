@@ -29,7 +29,7 @@ enabled = true
 # - https://developers.cloudflare.com/workers/configuration/secrets/
 [vars]
 IDENTIFIER = "locate.aviva.gay"
-LABELER_DID = "did:plc:jp6khwtiduqw7y5hm75vh6ve"
+LABELER_DID = "plc:jp6khwtiduqw7y5hm75vh6ve"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
