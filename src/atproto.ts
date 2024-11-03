@@ -163,6 +163,7 @@ export const signAndRecordLabelNegatingPrevious = async (env: Env, label: Templa
     console.log("label already applied!", active_labels.results)
     return []
   }
+  let negation_cts = new Date().toISOString()
   const new_labels = [
     ...active_labels.results
       .map(l => ({
@@ -170,7 +171,7 @@ export const signAndRecordLabelNegatingPrevious = async (env: Env, label: Templa
         // negate the active labels
         neg: true,
         // set a new time
-        cts: new Date().toISOString()
+        cts: negation_cts
       })),
     { ...label, cts: new Date().toISOString() }
   ].map(l =>
