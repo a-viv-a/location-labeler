@@ -7,6 +7,7 @@ import { prepareLabel, ensureLabelExists, signAndRecordLabelNegatingPrevious } f
 import { build_label_definition as buildLabelDefinition } from "./label";
 import { Place } from "./types";
 import SubscribeLabelsObject from "./SubscribeLabelsObject";
+import { cors } from "hono/cors";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -42,6 +43,10 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
 })
 
 
+app.use('/request-label', cors({
+  origin: '*',
+  allowMethods: ['POST']
+}))
 app.post('/request-label', async (c) => {
   const token = c.req.header('Token')
 
