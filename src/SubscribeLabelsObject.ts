@@ -1,7 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
-import { IndexedLabel } from "./types";
 import { frameToBytes } from "./util";
-import { formatLabel } from "@skyware/labeler";
+import { formatLabel, SavedLabel } from "@skyware/labeler";
 import { sendLabels } from "./atproto";
 
 // export abstract class DurableObject<Env = unknown>
@@ -106,7 +105,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     ws.close();
   }
 
-  private announceLabelForWs(ws: WebSocket, { id, ...label }: IndexedLabel) {
+  private announceLabelForWs(ws: WebSocket, { id, ...label }: SavedLabel) {
     // this is really noisy...
     // console.log({ msg: "announcing", id, neg: label.neg, val: label.val, cts: label.cts })
     const bytes = frameToBytes(
@@ -118,7 +117,7 @@ export default class SubscribeLabelsObject extends DurableObject<Env> {
     ws.send(bytes);
   }
 
-  async announceLabels(labels: IndexedLabel[]) {
+  async announceLabels(labels: SavedLabel[]) {
     for (const ws of this.ctx.getWebSockets()) {
       for (const label of labels) {
         this.announceLabelForWs(ws, label)

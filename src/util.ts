@@ -1,5 +1,7 @@
 import { encode as cborEncode } from "@atcute/cbor";
 import { concat as ui8Concat } from "uint8arrays";
+import { TemplateLabel } from "./types";
+import { SignedLabel } from "@skyware/labeler";
 
 type Nulled<T> = {
   [K in keyof T]: T[K] extends undefined ? null : T[K]
@@ -59,4 +61,9 @@ export function frameToBytes(type: "message", body: unknown, t: string): Uint8Ar
 export function frameToBytes(type: "error" | "message", body: unknown, t?: string): Uint8Array {
   const header = type === "error" ? { op: -1 } : { op: 1, t };
   return ui8Concat([cborEncode(header), cborEncode(body)]);
+}
+
+// https://github.com/skyware-js/labeler/blob/f549d8af7297a51c208944a1862010672f5322b5/src/util/labels.ts#L34-L36 with support for Templates
+export function labelIsSigned<T extends TemplateLabel>(label: T): label is T & SignedLabel {
+	return "sig" in label && label.sig !== undefined;
 }

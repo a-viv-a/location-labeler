@@ -1,10 +1,10 @@
-import { formatLabel, labelIsSigned, SignedLabel, signLabel, UnsignedLabel } from "@skyware/labeler";
+import { formatLabel, SavedLabel, SignedLabel, signLabel, UnsignedLabel } from "@skyware/labeler";
 import {
   ComAtprotoLabelDefs,
 } from "@atcute/client/lexicons";
-import { frameToBytes, iter_prepared, nulled, sleep } from "./util";
+import { frameToBytes, iter_prepared, labelIsSigned, nulled, sleep } from "./util";
 import { declareLabeler } from "@skyware/labeler/scripts";
-import { LabelDefinition, IndexedLabel } from "./types";
+import { LabelDefinition, TemplateLabel } from "./types";
 
 
 // dynamic labels
@@ -70,7 +70,7 @@ const buildLocales = (label: LabelDefinition): ComAtprotoLabelDefs.LabelValueDef
 export const sendLabels = async (
   cursor: number,
   env: Env,
-  announceLabel: (label: IndexedLabel) => void,
+  announceLabel: (label: SavedLabel) => void,
   onError: (error: string, message: string) => void
 ) => {
   if (Number.isNaN(cursor)) {
@@ -98,7 +98,7 @@ export const sendLabels = async (
 		`);
 
   try {
-    for await (const [_id, label] of iter_prepared<IndexedLabel>(
+    for await (const [_id, label] of iter_prepared<SavedLabel>(
       ({ i: id, batch }) => stmt.bind(id, batch),
       cursor,
       10
@@ -127,7 +127,7 @@ const buildRecordStmt = (DB: Env['DB'], signed: SignedLabel): ReturnType<Env['DB
 	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
 }
 
-export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promise<IndexedLabel[]> => {
+export const signAndRecordLabelNegatingPrevious = async (env: Env, label: TemplateLabel): Promise<SavedLabel[]> => {
   // const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
 
   if (labelIsSigned(label)) {
@@ -149,12 +149,12 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
         GROUP BY val
     )
 
-    SELECT src, uri, cid, val, neg, cts, exp FROM active_labels
+    SELECT src, uri, cid, val, neg, exp FROM active_labels
       WHERE (
         neg IS NULL
         OR neg = false
       )
-    `).bind(label.uri).all<UnsignedLabel>()
+    `).bind(label.uri).all<TemplateLabel>()
   if (!active_labels.success) {
     throw new Error("failed to find active labels")
   }
@@ -163,7 +163,6 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
     console.log("label already applied!", active_labels.results)
     return []
   }
-
   const new_labels = [
     ...active_labels.results
       .map(l => ({
@@ -173,14 +172,16 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
         // set a new time
         cts: new Date().toISOString()
       })),
-    label
+    { ...label, cts: new Date().toISOString() }
   ].map(l =>
     // the reason we can't do this all in one transaction is because we need to sign the dependent labels
-    // @ts-expect-error type for this fn is wrong in cf worker environment, it is string!
-    signLabel(l, env.LABEL_SIGNING_KEY)
+    signLabel(l,
+      // TODO: investigate
+      // @ts-expect-error type for this fn seems to be wrong in the cf worker environment
+      env.LABEL_SIGNING_KEY)
   )
 
-  const written = await env.DB.batch<SignedLabel & { id: number }>(new_labels.map(l => buildRecordStmt(env.DB, l)))
+  const written = await env.DB.batch<SavedLabel>(new_labels.map(l => buildRecordStmt(env.DB, l)))
 
   if (written == null || !written.reduce((success, write) => success && write.success, true)) {
     throw new Error("Failed to insert label");
@@ -191,7 +192,7 @@ export const signAndRecordLabel = async (env: Env, label: UnsignedLabel): Promis
   return flatWrites
 }
 
-export const prepareLabel = ({ src, target, date, neg }: { src: string, target: string, date?: Date, neg?: true }, labelDefinition: LabelDefinition): UnsignedLabel => {
+export const prepareLabel = ({ src, target, neg }: { src: string, target: string, neg?: true }, labelDefinition: LabelDefinition): TemplateLabel => {
   if (src.startsWith('did:') || target.startsWith('did:')) {
     throw new Error(`src/target should not have the "did:" prepended!`)
   }
@@ -201,6 +202,5 @@ export const prepareLabel = ({ src, target, date, neg }: { src: string, target: 
     uri: `did:${target}`,
     neg,
     // cid: undefined,
-    cts: (date ?? new Date()).toISOString()
   }
 }

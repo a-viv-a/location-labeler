@@ -1,4 +1,4 @@
-import { SignedLabel } from "@skyware/labeler";
+import { SignedLabel, UnsignedLabel } from "@skyware/labeler";
 
 // https://nominatim.org/release-docs/latest/api/Output/
 export type Place = {
@@ -38,4 +38,4 @@ export type LabelDefinition = {
   en_locale_desc: string
 }
 
-export type IndexedLabel = SignedLabel & { id: number }
+export type TemplateLabel = Omit<UnsignedLabel, "cts">

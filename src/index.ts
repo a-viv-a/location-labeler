@@ -3,7 +3,7 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { prepareLabel, ensureLabelExists, signAndRecordLabel } from "./atproto";
+import { prepareLabel, ensureLabelExists, signAndRecordLabelNegatingPrevious } from "./atproto";
 import { build_label_definition as buildLabelDefinition } from "./label";
 import { Place } from "./types";
 import SubscribeLabelsObject from "./SubscribeLabelsObject";
@@ -110,18 +110,18 @@ app.post('/request-label', async (c) => {
   const labelDefinition = buildLabelDefinition(place)
   await ensureLabelExists(c.env, labelDefinition)
 
-  const unsignedLabel = prepareLabel({
+  const templateLabel = prepareLabel({
     src: c.env.LABELER_DID,
     // aviva.gay
     target: 'plc:jx4g6baqkwdlonylsetvpu7c',
   }, labelDefinition)
 
-  const signedLabels = await signAndRecordLabel(c.env, unsignedLabel)
+  const signedLabels = await signAndRecordLabelNegatingPrevious(c.env, templateLabel)
 
   // TODO: check how many labels are returned
 
   const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
-  const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id) as DurableObjectStub<SubscribeLabelsObject>
+  const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
 
   await stub.announceLabels(signedLabels)
 
