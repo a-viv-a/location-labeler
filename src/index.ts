@@ -164,7 +164,7 @@ app.post('/api/request-label', async (c) => {
   }
 
   c.status(200)
-  return c.json({ msg: (alreadyApplied ? 'applied' : 'already applied'), labelDefinition, estimatedDistanceMiles })
+  return c.json({ msg: (alreadyApplied ? 'already applied' : 'applied'), labelDefinition, estimatedDistanceMiles })
 })
 
 export default app;
