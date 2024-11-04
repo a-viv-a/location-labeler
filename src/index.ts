@@ -89,7 +89,7 @@ app.post('/api/clear-labels', async (c) => {
   }
 
   c.status(200)
-  return c.json({ msg: (alreadyClear ? 'cleared' : 'already cleared'), negatedCount: signedLabels.length })
+  return c.json({ msg: (alreadyClear ? 'already cleared' : 'cleared'), negatedCount: signedLabels.length })
 })
 app.post('/api/request-label', async (c) => {
   const latitude_string = c.req.query('lat')

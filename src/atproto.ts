@@ -145,6 +145,9 @@ export const negateAndRecordAllActiveLabels = async (env: Env, uri: string): Pro
   if (!active_labels.success) {
     throw new Error("failed to find active labels")
   }
+  if (active_labels.results.length === 0) {
+    return []
+  }
   let negation_cts = new Date().toISOString()
   const new_labels = active_labels.results
     .map(l => ({
