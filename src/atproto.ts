@@ -127,6 +127,51 @@ const buildRecordStmt = (DB: Env['DB'], signed: SignedLabel): ReturnType<Env['DB
 	`).bind(...nulled(src, uri, cid, val, neg, cts, exp, sig));
 }
 
+// TODO: reduce duplication
+export const negateAndRecordAllActiveLabels = async (env: Env, uri: string): Promise<SavedLabel[]> => {
+  const active_labels = await env.DB.prepare(`
+    WITH active_labels AS (
+      SELECT src, uri, cid, val, neg, MAX(cts) as cts, exp, sig FROM labels
+        WHERE uri=?
+        GROUP BY val
+    )
+
+    SELECT src, uri, cid, val, neg, exp FROM active_labels
+      WHERE (
+        neg IS NULL
+        OR neg = false
+      )
+    `).bind(uri).all<TemplateLabel>()
+  if (!active_labels.success) {
+    throw new Error("failed to find active labels")
+  }
+  let negation_cts = new Date().toISOString()
+  const new_labels = active_labels.results
+    .map(l => ({
+      ...l,
+      // negate the active labels
+      neg: true,
+      // set a new time
+      cts: negation_cts
+    })).map(l =>
+      // the reason we can't do this all in one transaction is because we need to sign the dependent labels
+      signLabel(l,
+        // TODO: investigate
+        // @ts-expect-error type for this fn seems to be wrong in the cf worker environment
+        env.LABEL_SIGNING_KEY)
+    )
+
+  const written = await env.DB.batch<SavedLabel>(new_labels.map(l => buildRecordStmt(env.DB, l)))
+
+  if (written == null || !written.reduce((success, write) => success && write.success, true)) {
+    throw new Error("Failed to insert label");
+  }
+
+  const flatWrites = written.flatMap(write => write.results);
+  console.log("flatWrites", flatWrites)
+  return flatWrites
+}
+
 export const signAndRecordLabelNegatingPrevious = async (env: Env, label: TemplateLabel): Promise<SavedLabel[]> => {
   // const signed = labelIsSigned(label) ? label : signLabel(label, env.LABEL_SIGNING_KEY as any);
 
@@ -193,14 +238,18 @@ export const signAndRecordLabelNegatingPrevious = async (env: Env, label: Templa
   return flatWrites
 }
 
+const isDidString = (s: string): s is `did:${string}` => {
+  return s.startsWith('did:')
+}
+
 export const prepareLabel = ({ src, target, neg }: { src: string, target: string, neg?: true }, labelDefinition: LabelDefinition): TemplateLabel => {
-  if (src.startsWith('did:') || target.startsWith('did:')) {
-    throw new Error(`src/target should not have the "did:" prepended!`)
+  if (!(isDidString(src) && isDidString(target))) {
+    throw new Error(`src/target must have the "did:" prepended!`)
   }
   return {
     val: labelDefinition.identifier,
-    src: `did:${src}`,
-    uri: `did:${target}`,
+    src,
+    uri: target,
     neg,
     // cid: undefined,
   }

@@ -3,7 +3,7 @@ import {
   point,
   distance
 } from "@turf/turf";
-import { prepareLabel, ensureLabelExists, signAndRecordLabelNegatingPrevious } from "./atproto";
+import { prepareLabel, ensureLabelExists, signAndRecordLabelNegatingPrevious, negateAndRecordAllActiveLabels } from "./atproto";
 import { build_label_definition as buildLabelDefinition } from "./label";
 import { Place } from "./types";
 import SubscribeLabelsObject from "./SubscribeLabelsObject";
@@ -64,8 +64,7 @@ app.use('/api/*', bearerAuth({
   verifyToken: async (token, c) => {
     try {
       console.log({ token })
-      // TODO: SWITCH TO INCLUDING THE DID PREFIX IN THE ENV VARIABLE TO AVOID ISSUES LIKE THIS
-      const payload = await verifyJwt(token, `did:${c.env.LABELER_DID}`, null, getSigningKey)
+      const payload = await verifyJwt(token, c.env.LABELER_DID, null, getSigningKey)
       c.set('did', payload.iss)
     } catch (e) {
       console.error(e)
@@ -75,9 +74,23 @@ app.use('/api/*', bearerAuth({
     return true
   }
 }))
-app.post('/api/request-label', async (c) => {
-  const token = c.req.header('Token')
+app.post('/api/clear-labels', async (c) => {
+  // TODO: fix this type error
+  const signedLabels = await negateAndRecordAllActiveLabels(c.env, c.get('did'))
+  const alreadyClear = signedLabels.length === 0
 
+  if (!alreadyClear) {
+    // TODO: dedupe this code
+    const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
+    const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
+
+    await stub.announceLabels(signedLabels)
+  }
+
+  c.status(200)
+  return c.json({ msg: (alreadyClear ? 'cleared' : 'already cleared'), negatedCount: signedLabels.length })
+})
+app.post('/api/request-label', async (c) => {
   const latitude_string = c.req.query('lat')
   const longitude_string = c.req.query('lon')
   if (latitude_string == undefined || longitude_string == undefined) {
