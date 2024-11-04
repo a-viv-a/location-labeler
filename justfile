@@ -7,6 +7,10 @@ deploy:
 check:
     tsc --noEmit --watch
 
+# note to self, run tsc --build tsconfig.build.json to actually get changes into the dist directory...
+patch-package NAME:
+    npx patch-package {{NAME}}
+
 d1_cmd COMMAND *FLAGS:
     wrangler d1 execute label-status --command '{{COMMAND}}' --json {{FLAGS}} | bat -l json
 

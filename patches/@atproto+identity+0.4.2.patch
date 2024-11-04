@@ -1,0 +1,1661 @@
+diff --git a/node_modules/@atproto/identity/dist/did/atproto-data.js b/node_modules/@atproto/identity/dist/did/atproto-data.js
+index 70b1888..322e948 100644
+--- a/node_modules/@atproto/identity/dist/did/atproto-data.js
++++ b/node_modules/@atproto/identity/dist/did/atproto-data.js
+@@ -1,46 +1,23 @@
+ "use strict";
+-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    var desc = Object.getOwnPropertyDescriptor(m, k);
+-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+-      desc = { enumerable: true, get: function() { return m[k]; } };
+-    }
+-    Object.defineProperty(o, k2, desc);
+-}) : (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    o[k2] = m[k];
+-}));
+-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+-    Object.defineProperty(o, "default", { enumerable: true, value: v });
+-}) : function(o, v) {
+-    o["default"] = v;
+-});
+-var __importStar = (this && this.__importStar) || function (mod) {
+-    if (mod && mod.__esModule) return mod;
+-    var result = {};
+-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+-    __setModuleDefault(result, mod);
+-    return result;
+-};
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.ensureAtprotoKey = exports.ensureAtpDocument = exports.parseToAtprotoDocument = exports.getDidKeyFromMultibase = exports.getKey = exports.getNotif = exports.getFeedGen = exports.getPds = exports.getHandle = exports.getDid = void 0;
+-const crypto = __importStar(require("@atproto/crypto"));
+-const common_web_1 = require("@atproto/common-web");
++var crypto = require("@atproto/crypto");
++var common_web_1 = require("@atproto/common-web");
+ Object.defineProperty(exports, "getDid", { enumerable: true, get: function () { return common_web_1.getDid; } });
+ Object.defineProperty(exports, "getHandle", { enumerable: true, get: function () { return common_web_1.getHandle; } });
+ Object.defineProperty(exports, "getPds", { enumerable: true, get: function () { return common_web_1.getPdsEndpoint; } });
+ Object.defineProperty(exports, "getFeedGen", { enumerable: true, get: function () { return common_web_1.getFeedGenEndpoint; } });
+ Object.defineProperty(exports, "getNotif", { enumerable: true, get: function () { return common_web_1.getNotifEndpoint; } });
+-const getKey = (doc) => {
+-    const key = (0, common_web_1.getSigningKey)(doc);
++var getKey = function (doc) {
++    var key = (0, common_web_1.getSigningKey)(doc);
+     if (!key)
+         return undefined;
+     return (0, exports.getDidKeyFromMultibase)(key);
+ };
+ exports.getKey = getKey;
+-const getDidKeyFromMultibase = (key) => {
+-    const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase);
+-    let didKey = undefined;
++var getDidKeyFromMultibase = function (key) {
++    var keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase);
++    var didKey = undefined;
+     if (key.type === 'EcdsaSecp256r1VerificationKey2019') {
+         didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes);
+     }
+@@ -48,45 +25,44 @@ const getDidKeyFromMultibase = (key) => {
+         didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes);
+     }
+     else if (key.type === 'Multikey') {
+-        const parsed = crypto.parseMultikey(key.publicKeyMultibase);
++        var parsed = crypto.parseMultikey(key.publicKeyMultibase);
+         didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes);
+     }
+     return didKey;
+ };
+ exports.getDidKeyFromMultibase = getDidKeyFromMultibase;
+-const parseToAtprotoDocument = (doc) => {
+-    const did = (0, common_web_1.getDid)(doc);
++var parseToAtprotoDocument = function (doc) {
++    var did = (0, common_web_1.getDid)(doc);
+     return {
+-        did,
++        did: did,
+         signingKey: (0, exports.getKey)(doc),
+         handle: (0, common_web_1.getHandle)(doc),
+         pds: (0, common_web_1.getPdsEndpoint)(doc),
+     };
+ };
+ exports.parseToAtprotoDocument = parseToAtprotoDocument;
+-const ensureAtpDocument = (doc) => {
+-    const { did, signingKey, handle, pds } = (0, exports.parseToAtprotoDocument)(doc);
++var ensureAtpDocument = function (doc) {
++    var _a = (0, exports.parseToAtprotoDocument)(doc), did = _a.did, signingKey = _a.signingKey, handle = _a.handle, pds = _a.pds;
+     if (!did) {
+-        throw new Error(`Could not parse id from doc: ${doc}`);
++        throw new Error("Could not parse id from doc: ".concat(doc));
+     }
+     if (!signingKey) {
+-        throw new Error(`Could not parse signingKey from doc: ${doc}`);
++        throw new Error("Could not parse signingKey from doc: ".concat(doc));
+     }
+     if (!handle) {
+-        throw new Error(`Could not parse handle from doc: ${doc}`);
++        throw new Error("Could not parse handle from doc: ".concat(doc));
+     }
+     if (!pds) {
+-        throw new Error(`Could not parse pds from doc: ${doc}`);
++        throw new Error("Could not parse pds from doc: ".concat(doc));
+     }
+-    return { did, signingKey, handle, pds };
++    return { did: did, signingKey: signingKey, handle: handle, pds: pds };
+ };
+ exports.ensureAtpDocument = ensureAtpDocument;
+-const ensureAtprotoKey = (doc) => {
+-    const { signingKey } = (0, exports.parseToAtprotoDocument)(doc);
++var ensureAtprotoKey = function (doc) {
++    var signingKey = (0, exports.parseToAtprotoDocument)(doc).signingKey;
+     if (!signingKey) {
+-        throw new Error(`Could not parse signingKey from doc: ${doc}`);
++        throw new Error("Could not parse signingKey from doc: ".concat(doc));
+     }
+     return signingKey;
+ };
+ exports.ensureAtprotoKey = ensureAtprotoKey;
+-//# sourceMappingURL=atproto-data.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/base-resolver.js b/node_modules/@atproto/identity/dist/did/base-resolver.js
+index 5566fe8..328c09e 100644
+--- a/node_modules/@atproto/identity/dist/did/base-resolver.js
++++ b/node_modules/@atproto/identity/dist/did/base-resolver.js
+@@ -1,44 +1,52 @@
+ "use strict";
+-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    var desc = Object.getOwnPropertyDescriptor(m, k);
+-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+-      desc = { enumerable: true, get: function() { return m[k]; } };
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
++};
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+     }
+-    Object.defineProperty(o, k2, desc);
+-}) : (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    o[k2] = m[k];
+-}));
+-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+-    Object.defineProperty(o, "default", { enumerable: true, value: v });
+-}) : function(o, v) {
+-    o["default"] = v;
+-});
+-var __importStar = (this && this.__importStar) || function (mod) {
+-    if (mod && mod.__esModule) return mod;
+-    var result = {};
+-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+-    __setModuleDefault(result, mod);
+-    return result;
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.BaseResolver = void 0;
+-const crypto = __importStar(require("@atproto/crypto"));
+-const common_web_1 = require("@atproto/common-web");
+-const types_1 = require("../types");
+-const atprotoData = __importStar(require("./atproto-data"));
+-const errors_1 = require("../errors");
+-class BaseResolver {
+-    constructor(cache) {
+-        Object.defineProperty(this, "cache", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: cache
+-        });
++var crypto = require("@atproto/crypto");
++var common_web_1 = require("@atproto/common-web");
++var types_1 = require("../types");
++var atprotoData = require("./atproto-data");
++var errors_1 = require("../errors");
++var BaseResolver = /** @class */ (function () {
++    function BaseResolver(cache) {
++        this.cache = cache;
+     }
+-    validateDidDoc(did, val) {
++    BaseResolver.prototype.validateDidDoc = function (did, val) {
+         if (!common_web_1.check.is(val, types_1.didDocument)) {
+             throw new errors_1.PoorlyFormattedDidDocumentError(did, val);
+         }
+@@ -46,60 +54,135 @@ class BaseResolver {
+             throw new errors_1.PoorlyFormattedDidDocumentError(did, val);
+         }
+         return val;
+-    }
+-    async resolveNoCache(did) {
+-        const got = await this.resolveNoCheck(did);
+-        if (got === null)
+-            return null;
+-        return this.validateDidDoc(did, got);
+-    }
+-    async refreshCache(did, prevResult) {
+-        await this.cache?.refreshCache(did, () => this.resolveNoCache(did), prevResult);
+-    }
+-    async resolve(did, forceRefresh = false) {
+-        let fromCache = null;
+-        if (this.cache && !forceRefresh) {
+-            fromCache = await this.cache.checkCache(did);
+-            if (fromCache && !fromCache.expired) {
+-                if (fromCache?.stale) {
+-                    await this.refreshCache(did, fromCache);
++    };
++    BaseResolver.prototype.resolveNoCache = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            var got;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0: return [4 /*yield*/, this.resolveNoCheck(did)];
++                    case 1:
++                        got = _a.sent();
++                        if (got === null)
++                            return [2 /*return*/, null];
++                        return [2 /*return*/, this.validateDidDoc(did, got)];
+                 }
+-                return fromCache.doc;
+-            }
+-        }
+-        const got = await this.resolveNoCache(did);
+-        if (got === null) {
+-            await this.cache?.clearEntry(did);
+-            return null;
+-        }
+-        await this.cache?.cacheDid(did, got, fromCache ?? undefined);
+-        return got;
+-    }
+-    async ensureResolve(did, forceRefresh = false) {
+-        const result = await this.resolve(did, forceRefresh);
+-        if (result === null) {
+-            throw new errors_1.DidNotFoundError(did);
+-        }
+-        return result;
+-    }
+-    async resolveAtprotoData(did, forceRefresh = false) {
+-        const didDocument = await this.ensureResolve(did, forceRefresh);
+-        return atprotoData.ensureAtpDocument(didDocument);
+-    }
+-    async resolveAtprotoKey(did, forceRefresh = false) {
+-        if (did.startsWith('did:key:')) {
+-            return did;
+-        }
+-        else {
+-            const didDocument = await this.ensureResolve(did, forceRefresh);
+-            return atprotoData.ensureAtprotoKey(didDocument);
+-        }
+-    }
+-    async verifySignature(did, data, sig, forceRefresh = false) {
+-        const signingKey = await this.resolveAtprotoKey(did, forceRefresh);
+-        return crypto.verifySignature(signingKey, data, sig);
+-    }
+-}
++            });
++        });
++    };
++    BaseResolver.prototype.refreshCache = function (did, prevResult) {
++        return __awaiter(this, void 0, void 0, function () {
++            var _this = this;
++            var _a;
++            return __generator(this, function (_b) {
++                switch (_b.label) {
++                    case 0: return [4 /*yield*/, ((_a = this.cache) === null || _a === void 0 ? void 0 : _a.refreshCache(did, function () { return _this.resolveNoCache(did); }, prevResult))];
++                    case 1:
++                        _b.sent();
++                        return [2 /*return*/];
++                }
++            });
++        });
++    };
++    BaseResolver.prototype.resolve = function (did_1) {
++        return __awaiter(this, arguments, void 0, function (did, forceRefresh) {
++            var fromCache, got;
++            var _a, _b;
++            if (forceRefresh === void 0) { forceRefresh = false; }
++            return __generator(this, function (_c) {
++                switch (_c.label) {
++                    case 0:
++                        fromCache = null;
++                        if (!(this.cache && !forceRefresh)) return [3 /*break*/, 4];
++                        return [4 /*yield*/, this.cache.checkCache(did)];
++                    case 1:
++                        fromCache = _c.sent();
++                        if (!(fromCache && !fromCache.expired)) return [3 /*break*/, 4];
++                        if (!(fromCache === null || fromCache === void 0 ? void 0 : fromCache.stale)) return [3 /*break*/, 3];
++                        return [4 /*yield*/, this.refreshCache(did, fromCache)];
++                    case 2:
++                        _c.sent();
++                        _c.label = 3;
++                    case 3: return [2 /*return*/, fromCache.doc];
++                    case 4: return [4 /*yield*/, this.resolveNoCache(did)];
++                    case 5:
++                        got = _c.sent();
++                        if (!(got === null)) return [3 /*break*/, 7];
++                        return [4 /*yield*/, ((_a = this.cache) === null || _a === void 0 ? void 0 : _a.clearEntry(did))];
++                    case 6:
++                        _c.sent();
++                        return [2 /*return*/, null];
++                    case 7: return [4 /*yield*/, ((_b = this.cache) === null || _b === void 0 ? void 0 : _b.cacheDid(did, got, fromCache !== null && fromCache !== void 0 ? fromCache : undefined))];
++                    case 8:
++                        _c.sent();
++                        return [2 /*return*/, got];
++                }
++            });
++        });
++    };
++    BaseResolver.prototype.ensureResolve = function (did_1) {
++        return __awaiter(this, arguments, void 0, function (did, forceRefresh) {
++            var result;
++            if (forceRefresh === void 0) { forceRefresh = false; }
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0: return [4 /*yield*/, this.resolve(did, forceRefresh)];
++                    case 1:
++                        result = _a.sent();
++                        if (result === null) {
++                            throw new errors_1.DidNotFoundError(did);
++                        }
++                        return [2 /*return*/, result];
++                }
++            });
++        });
++    };
++    BaseResolver.prototype.resolveAtprotoData = function (did_1) {
++        return __awaiter(this, arguments, void 0, function (did, forceRefresh) {
++            var didDocument;
++            if (forceRefresh === void 0) { forceRefresh = false; }
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0: return [4 /*yield*/, this.ensureResolve(did, forceRefresh)];
++                    case 1:
++                        didDocument = _a.sent();
++                        return [2 /*return*/, atprotoData.ensureAtpDocument(didDocument)];
++                }
++            });
++        });
++    };
++    BaseResolver.prototype.resolveAtprotoKey = function (did_1) {
++        return __awaiter(this, arguments, void 0, function (did, forceRefresh) {
++            var didDocument_1;
++            if (forceRefresh === void 0) { forceRefresh = false; }
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        if (!did.startsWith('did:key:')) return [3 /*break*/, 1];
++                        return [2 /*return*/, did];
++                    case 1: return [4 /*yield*/, this.ensureResolve(did, forceRefresh)];
++                    case 2:
++                        didDocument_1 = _a.sent();
++                        return [2 /*return*/, atprotoData.ensureAtprotoKey(didDocument_1)];
++                }
++            });
++        });
++    };
++    BaseResolver.prototype.verifySignature = function (did_1, data_1, sig_1) {
++        return __awaiter(this, arguments, void 0, function (did, data, sig, forceRefresh) {
++            var signingKey;
++            if (forceRefresh === void 0) { forceRefresh = false; }
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0: return [4 /*yield*/, this.resolveAtprotoKey(did, forceRefresh)];
++                    case 1:
++                        signingKey = _a.sent();
++                        return [2 /*return*/, crypto.verifySignature(signingKey, data, sig)];
++                }
++            });
++        });
++    };
++    return BaseResolver;
++}());
+ exports.BaseResolver = BaseResolver;
+ exports.default = BaseResolver;
+-//# sourceMappingURL=base-resolver.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/did-resolver.js b/node_modules/@atproto/identity/dist/did/did-resolver.js
+index d96039b..b8da875 100644
+--- a/node_modules/@atproto/identity/dist/did/did-resolver.js
++++ b/node_modules/@atproto/identity/dist/did/did-resolver.js
+@@ -1,41 +1,90 @@
+ "use strict";
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
++var __extends = (this && this.__extends) || (function () {
++    var extendStatics = function (d, b) {
++        extendStatics = Object.setPrototypeOf ||
++            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
++            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
++        return extendStatics(d, b);
++    };
++    return function (d, b) {
++        if (typeof b !== "function" && b !== null)
++            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
++        extendStatics(d, b);
++        function __() { this.constructor = d; }
++        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
++    };
++})();
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
++};
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
++    }
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DidResolver = void 0;
+-const web_resolver_1 = require("./web-resolver");
+-const plc_resolver_1 = require("./plc-resolver");
+-const base_resolver_1 = __importDefault(require("./base-resolver"));
+-const errors_1 = require("../errors");
+-class DidResolver extends base_resolver_1.default {
+-    constructor(opts) {
+-        super(opts.didCache);
+-        Object.defineProperty(this, "methods", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
+-        });
+-        const { timeout = 3000, plcUrl = 'https://plc.directory' } = opts;
++var web_resolver_1 = require("./web-resolver");
++var plc_resolver_1 = require("./plc-resolver");
++var base_resolver_1 = require("./base-resolver");
++var errors_1 = require("../errors");
++var DidResolver = /** @class */ (function (_super) {
++    __extends(DidResolver, _super);
++    function DidResolver(opts) {
++        var _this = _super.call(this, opts.didCache) || this;
++        var _a = opts.timeout, timeout = _a === void 0 ? 3000 : _a, _b = opts.plcUrl, plcUrl = _b === void 0 ? 'https://plc.directory' : _b;
+         // do not pass cache to sub-methods or we will be double caching
+-        this.methods = {
++        _this.methods = {
+             plc: new plc_resolver_1.DidPlcResolver(plcUrl, timeout),
+             web: new web_resolver_1.DidWebResolver(timeout),
+         };
++        return _this;
+     }
+-    async resolveNoCheck(did) {
+-        const split = did.split(':');
+-        if (split[0] !== 'did') {
+-            throw new errors_1.PoorlyFormattedDidError(did);
+-        }
+-        const method = this.methods[split[1]];
+-        if (!method) {
+-            throw new errors_1.UnsupportedDidMethodError(did);
+-        }
+-        return method.resolveNoCheck(did);
+-    }
+-}
++    DidResolver.prototype.resolveNoCheck = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            var split, method;
++            return __generator(this, function (_a) {
++                split = did.split(':');
++                if (split[0] !== 'did') {
++                    throw new errors_1.PoorlyFormattedDidError(did);
++                }
++                method = this.methods[split[1]];
++                if (!method) {
++                    throw new errors_1.UnsupportedDidMethodError(did);
++                }
++                return [2 /*return*/, method.resolveNoCheck(did)];
++            });
++        });
++    };
++    return DidResolver;
++}(base_resolver_1.default));
+ exports.DidResolver = DidResolver;
+ exports.default = DidResolver;
+-//# sourceMappingURL=did-resolver.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/index.js b/node_modules/@atproto/identity/dist/did/index.js
+index 3b55bbe..6f1e5bc 100644
+--- a/node_modules/@atproto/identity/dist/did/index.js
++++ b/node_modules/@atproto/identity/dist/did/index.js
+@@ -19,4 +19,3 @@ __exportStar(require("./plc-resolver"), exports);
+ __exportStar(require("./did-resolver"), exports);
+ __exportStar(require("./atproto-data"), exports);
+ __exportStar(require("./memory-cache"), exports);
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/memory-cache.js b/node_modules/@atproto/identity/dist/did/memory-cache.js
+index ba321e9..9715e09 100644
+--- a/node_modules/@atproto/identity/dist/did/memory-cache.js
++++ b/node_modules/@atproto/identity/dist/did/memory-cache.js
+@@ -1,59 +1,116 @@
+ "use strict";
++var __assign = (this && this.__assign) || function () {
++    __assign = Object.assign || function(t) {
++        for (var s, i = 1, n = arguments.length; i < n; i++) {
++            s = arguments[i];
++            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
++                t[p] = s[p];
++        }
++        return t;
++    };
++    return __assign.apply(this, arguments);
++};
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
++};
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
++    }
++};
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.MemoryCache = void 0;
+-const common_web_1 = require("@atproto/common-web");
+-class MemoryCache {
+-    constructor(staleTTL, maxTTL) {
+-        Object.defineProperty(this, "staleTTL", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
++var common_web_1 = require("@atproto/common-web");
++var MemoryCache = /** @class */ (function () {
++    function MemoryCache(staleTTL, maxTTL) {
++        this.cache = new Map();
++        this.staleTTL = staleTTL !== null && staleTTL !== void 0 ? staleTTL : common_web_1.HOUR;
++        this.maxTTL = maxTTL !== null && maxTTL !== void 0 ? maxTTL : common_web_1.DAY;
++    }
++    MemoryCache.prototype.cacheDid = function (did, doc) {
++        return __awaiter(this, void 0, void 0, function () {
++            return __generator(this, function (_a) {
++                this.cache.set(did, { doc: doc, updatedAt: Date.now() });
++                return [2 /*return*/];
++            });
+         });
+-        Object.defineProperty(this, "maxTTL", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
++    };
++    MemoryCache.prototype.refreshCache = function (did, getDoc) {
++        return __awaiter(this, void 0, void 0, function () {
++            var doc;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0: return [4 /*yield*/, getDoc()];
++                    case 1:
++                        doc = _a.sent();
++                        if (!doc) return [3 /*break*/, 3];
++                        return [4 /*yield*/, this.cacheDid(did, doc)];
++                    case 2:
++                        _a.sent();
++                        _a.label = 3;
++                    case 3: return [2 /*return*/];
++                }
++            });
+         });
+-        Object.defineProperty(this, "cache", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: new Map()
++    };
++    MemoryCache.prototype.checkCache = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            var val, now, expired, stale;
++            return __generator(this, function (_a) {
++                val = this.cache.get(did);
++                if (!val)
++                    return [2 /*return*/, null];
++                now = Date.now();
++                expired = now > val.updatedAt + this.maxTTL;
++                stale = now > val.updatedAt + this.staleTTL;
++                return [2 /*return*/, __assign(__assign({}, val), { did: did, stale: stale, expired: expired })];
++            });
+         });
+-        this.staleTTL = staleTTL ?? common_web_1.HOUR;
+-        this.maxTTL = maxTTL ?? common_web_1.DAY;
+-    }
+-    async cacheDid(did, doc) {
+-        this.cache.set(did, { doc, updatedAt: Date.now() });
+-    }
+-    async refreshCache(did, getDoc) {
+-        const doc = await getDoc();
+-        if (doc) {
+-            await this.cacheDid(did, doc);
+-        }
+-    }
+-    async checkCache(did) {
+-        const val = this.cache.get(did);
+-        if (!val)
+-            return null;
+-        const now = Date.now();
+-        const expired = now > val.updatedAt + this.maxTTL;
+-        const stale = now > val.updatedAt + this.staleTTL;
+-        return {
+-            ...val,
+-            did,
+-            stale,
+-            expired,
+-        };
+-    }
+-    async clearEntry(did) {
+-        this.cache.delete(did);
+-    }
+-    async clear() {
+-        this.cache.clear();
+-    }
+-}
++    };
++    MemoryCache.prototype.clearEntry = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            return __generator(this, function (_a) {
++                this.cache.delete(did);
++                return [2 /*return*/];
++            });
++        });
++    };
++    MemoryCache.prototype.clear = function () {
++        return __awaiter(this, void 0, void 0, function () {
++            return __generator(this, function (_a) {
++                this.cache.clear();
++                return [2 /*return*/];
++            });
++        });
++    };
++    return MemoryCache;
++}());
+ exports.MemoryCache = MemoryCache;
+-//# sourceMappingURL=memory-cache.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/plc-resolver.js b/node_modules/@atproto/identity/dist/did/plc-resolver.js
+index 729fe60..5285914 100644
+--- a/node_modules/@atproto/identity/dist/did/plc-resolver.js
++++ b/node_modules/@atproto/identity/dist/did/plc-resolver.js
+@@ -1,70 +1,90 @@
+ "use strict";
+-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    var desc = Object.getOwnPropertyDescriptor(m, k);
+-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+-      desc = { enumerable: true, get: function() { return m[k]; } };
+-    }
+-    Object.defineProperty(o, k2, desc);
+-}) : (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    o[k2] = m[k];
+-}));
+-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+-    Object.defineProperty(o, "default", { enumerable: true, value: v });
+-}) : function(o, v) {
+-    o["default"] = v;
+-});
+-var __importStar = (this && this.__importStar) || function (mod) {
+-    if (mod && mod.__esModule) return mod;
+-    var result = {};
+-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+-    __setModuleDefault(result, mod);
+-    return result;
++var __extends = (this && this.__extends) || (function () {
++    var extendStatics = function (d, b) {
++        extendStatics = Object.setPrototypeOf ||
++            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
++            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
++        return extendStatics(d, b);
++    };
++    return function (d, b) {
++        if (typeof b !== "function" && b !== null)
++            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
++        extendStatics(d, b);
++        function __() { this.constructor = d; }
++        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
++    };
++})();
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
+ };
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
++    }
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DidPlcResolver = void 0;
+-const axios_1 = __importStar(require("axios"));
+-const base_resolver_1 = __importDefault(require("./base-resolver"));
+-class DidPlcResolver extends base_resolver_1.default {
+-    constructor(plcUrl, timeout, cache) {
+-        super(cache);
+-        Object.defineProperty(this, "plcUrl", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: plcUrl
+-        });
+-        Object.defineProperty(this, "timeout", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: timeout
+-        });
+-        Object.defineProperty(this, "cache", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: cache
+-        });
++var base_resolver_1 = require("./base-resolver");
++var DidPlcResolver = /** @class */ (function (_super) {
++    __extends(DidPlcResolver, _super);
++    function DidPlcResolver(plcUrl, timeout, cache) {
++        var _this = _super.call(this, cache) || this;
++        _this.plcUrl = plcUrl;
++        _this.timeout = timeout;
++        _this.cache = cache;
++        return _this;
+     }
+-    async resolveNoCheck(did) {
+-        try {
+-            const res = await axios_1.default.get(`${this.plcUrl}/${encodeURIComponent(did)}`, {
+-                timeout: this.timeout,
++    DidPlcResolver.prototype.resolveNoCheck = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            var controller, timeoutId, res;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        controller = new AbortController();
++                        timeoutId = setTimeout(function () { return controller.abort(); }, this.timeout);
++                        return [4 /*yield*/, fetch("".concat(this.plcUrl, "/").concat(encodeURIComponent(did)), {
++                                signal: controller.signal,
++                            })];
++                    case 1:
++                        res = _a.sent();
++                        clearTimeout(timeoutId);
++                        if (!res.ok) {
++                            return [2 /*return*/, null];
++                        }
++                        return [4 /*yield*/, res.text()];
++                    case 2: return [2 /*return*/, _a.sent()];
++                }
+             });
+-            return res.data;
+-        }
+-        catch (err) {
+-            if (err instanceof axios_1.AxiosError && err.response?.status === 404) {
+-                return null; // Positively not found, versus due to e.g. network error
+-            }
+-            throw err;
+-        }
+-    }
+-}
++        });
++    };
++    return DidPlcResolver;
++}(base_resolver_1.default));
+ exports.DidPlcResolver = DidPlcResolver;
+-//# sourceMappingURL=plc-resolver.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/did/web-resolver.js b/node_modules/@atproto/identity/dist/did/web-resolver.js
+index 369fbdc..5311f42 100644
+--- a/node_modules/@atproto/identity/dist/did/web-resolver.js
++++ b/node_modules/@atproto/identity/dist/did/web-resolver.js
+@@ -1,85 +1,108 @@
+ "use strict";
+-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    var desc = Object.getOwnPropertyDescriptor(m, k);
+-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+-      desc = { enumerable: true, get: function() { return m[k]; } };
+-    }
+-    Object.defineProperty(o, k2, desc);
+-}) : (function(o, m, k, k2) {
+-    if (k2 === undefined) k2 = k;
+-    o[k2] = m[k];
+-}));
+-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+-    Object.defineProperty(o, "default", { enumerable: true, value: v });
+-}) : function(o, v) {
+-    o["default"] = v;
+-});
+-var __importStar = (this && this.__importStar) || function (mod) {
+-    if (mod && mod.__esModule) return mod;
+-    var result = {};
+-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+-    __setModuleDefault(result, mod);
+-    return result;
++var __extends = (this && this.__extends) || (function () {
++    var extendStatics = function (d, b) {
++        extendStatics = Object.setPrototypeOf ||
++            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
++            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
++        return extendStatics(d, b);
++    };
++    return function (d, b) {
++        if (typeof b !== "function" && b !== null)
++            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
++        extendStatics(d, b);
++        function __() { this.constructor = d; }
++        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
++    };
++})();
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
+ };
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
++    }
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DidWebResolver = exports.DOC_PATH = void 0;
+-const axios_1 = __importStar(require("axios"));
+-const base_resolver_1 = __importDefault(require("./base-resolver"));
+-const errors_1 = require("../errors");
++var base_resolver_1 = require("./base-resolver");
++var errors_1 = require("../errors");
+ exports.DOC_PATH = '/.well-known/did.json';
+-class DidWebResolver extends base_resolver_1.default {
+-    constructor(timeout, cache) {
+-        super(cache);
+-        Object.defineProperty(this, "timeout", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: timeout
+-        });
+-        Object.defineProperty(this, "cache", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: cache
+-        });
++var DidWebResolver = /** @class */ (function (_super) {
++    __extends(DidWebResolver, _super);
++    function DidWebResolver(timeout, cache) {
++        var _this = _super.call(this, cache) || this;
++        _this.timeout = timeout;
++        _this.cache = cache;
++        return _this;
+     }
+-    async resolveNoCheck(did) {
+-        const parsedId = did.split(':').slice(2).join(':');
+-        const parts = parsedId.split(':').map(decodeURIComponent);
+-        let path;
+-        if (parts.length < 1) {
+-            throw new errors_1.PoorlyFormattedDidError(did);
+-        }
+-        else if (parts.length === 1) {
+-            path = parts[0] + exports.DOC_PATH;
+-        }
+-        else {
+-            // how we *would* resolve a did:web with path, if atproto supported it
+-            //path = parts.join('/') + '/did.json'
+-            throw new errors_1.UnsupportedDidWebPathError(did);
+-        }
+-        const url = new URL(`https://${path}`);
+-        if (url.hostname === 'localhost') {
+-            url.protocol = 'http';
+-        }
+-        try {
+-            const res = await axios_1.default.get(url.toString(), {
+-                responseType: 'json',
+-                timeout: this.timeout,
++    DidWebResolver.prototype.resolveNoCheck = function (did) {
++        return __awaiter(this, void 0, void 0, function () {
++            var parsedId, parts, path, url, controller, timeoutId, res;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        parsedId = did.split(':').slice(2).join(':');
++                        parts = parsedId.split(':').map(decodeURIComponent);
++                        if (parts.length < 1) {
++                            throw new errors_1.PoorlyFormattedDidError(did);
++                        }
++                        else if (parts.length === 1) {
++                            path = parts[0] + exports.DOC_PATH;
++                        }
++                        else {
++                            // how we *would* resolve a did:web with path, if atproto supported it
++                            //path = parts.join('/') + '/did.json'
++                            throw new errors_1.UnsupportedDidWebPathError(did);
++                        }
++                        url = new URL("https://".concat(path));
++                        if (url.hostname === 'localhost') {
++                            url.protocol = 'http';
++                        }
++                        controller = new AbortController();
++                        timeoutId = setTimeout(function () { return controller.abort(); }, this.timeout);
++                        return [4 /*yield*/, fetch(url.toString(), {
++                                signal: controller.signal,
++                            })];
++                    case 1:
++                        res = _a.sent();
++                        clearTimeout(timeoutId);
++                        if (!res.ok) {
++                            return [2 /*return*/, null];
++                        }
++                        return [4 /*yield*/, res.json()];
++                    case 2: return [2 /*return*/, _a.sent()];
++                }
+             });
+-            return res.data;
+-        }
+-        catch (err) {
+-            if (err instanceof axios_1.AxiosError && err.response) {
+-                return null; // Positively not found, versus due to e.g. network error
+-            }
+-            throw err;
+-        }
+-    }
+-}
++        });
++    };
++    return DidWebResolver;
++}(base_resolver_1.default));
+ exports.DidWebResolver = DidWebResolver;
+-//# sourceMappingURL=web-resolver.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/errors.js b/node_modules/@atproto/identity/dist/errors.js
+index b692063..240380d 100644
+--- a/node_modules/@atproto/identity/dist/errors.js
++++ b/node_modules/@atproto/identity/dist/errors.js
+@@ -1,70 +1,69 @@
+ "use strict";
++var __extends = (this && this.__extends) || (function () {
++    var extendStatics = function (d, b) {
++        extendStatics = Object.setPrototypeOf ||
++            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
++            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
++        return extendStatics(d, b);
++    };
++    return function (d, b) {
++        if (typeof b !== "function" && b !== null)
++            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
++        extendStatics(d, b);
++        function __() { this.constructor = d; }
++        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
++    };
++})();
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.UnsupportedDidWebPathError = exports.PoorlyFormattedDidDocumentError = exports.UnsupportedDidMethodError = exports.PoorlyFormattedDidError = exports.DidNotFoundError = void 0;
+-class DidNotFoundError extends Error {
+-    constructor(did) {
+-        super(`Could not resolve DID: ${did}`);
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: did
+-        });
++var DidNotFoundError = /** @class */ (function (_super) {
++    __extends(DidNotFoundError, _super);
++    function DidNotFoundError(did) {
++        var _this = _super.call(this, "Could not resolve DID: ".concat(did)) || this;
++        _this.did = did;
++        return _this;
+     }
+-}
++    return DidNotFoundError;
++}(Error));
+ exports.DidNotFoundError = DidNotFoundError;
+-class PoorlyFormattedDidError extends Error {
+-    constructor(did) {
+-        super(`Poorly formatted DID: ${did}`);
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: did
+-        });
++var PoorlyFormattedDidError = /** @class */ (function (_super) {
++    __extends(PoorlyFormattedDidError, _super);
++    function PoorlyFormattedDidError(did) {
++        var _this = _super.call(this, "Poorly formatted DID: ".concat(did)) || this;
++        _this.did = did;
++        return _this;
+     }
+-}
++    return PoorlyFormattedDidError;
++}(Error));
+ exports.PoorlyFormattedDidError = PoorlyFormattedDidError;
+-class UnsupportedDidMethodError extends Error {
+-    constructor(did) {
+-        super(`Unsupported DID method: ${did}`);
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: did
+-        });
++var UnsupportedDidMethodError = /** @class */ (function (_super) {
++    __extends(UnsupportedDidMethodError, _super);
++    function UnsupportedDidMethodError(did) {
++        var _this = _super.call(this, "Unsupported DID method: ".concat(did)) || this;
++        _this.did = did;
++        return _this;
+     }
+-}
++    return UnsupportedDidMethodError;
++}(Error));
+ exports.UnsupportedDidMethodError = UnsupportedDidMethodError;
+-class PoorlyFormattedDidDocumentError extends Error {
+-    constructor(did, doc) {
+-        super(`Poorly formatted DID Document: ${doc}`);
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: did
+-        });
+-        Object.defineProperty(this, "doc", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: doc
+-        });
++var PoorlyFormattedDidDocumentError = /** @class */ (function (_super) {
++    __extends(PoorlyFormattedDidDocumentError, _super);
++    function PoorlyFormattedDidDocumentError(did, doc) {
++        var _this = _super.call(this, "Poorly formatted DID Document: ".concat(doc)) || this;
++        _this.did = did;
++        _this.doc = doc;
++        return _this;
+     }
+-}
++    return PoorlyFormattedDidDocumentError;
++}(Error));
+ exports.PoorlyFormattedDidDocumentError = PoorlyFormattedDidDocumentError;
+-class UnsupportedDidWebPathError extends Error {
+-    constructor(did) {
+-        super(`Unsupported did:web paths: ${did}`);
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: did
+-        });
++var UnsupportedDidWebPathError = /** @class */ (function (_super) {
++    __extends(UnsupportedDidWebPathError, _super);
++    function UnsupportedDidWebPathError(did) {
++        var _this = _super.call(this, "Unsupported did:web paths: ".concat(did)) || this;
++        _this.did = did;
++        return _this;
+     }
+-}
++    return UnsupportedDidWebPathError;
++}(Error));
+ exports.UnsupportedDidWebPathError = UnsupportedDidWebPathError;
+-//# sourceMappingURL=errors.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/handle/index.js b/node_modules/@atproto/identity/dist/handle/index.js
+index 6edf901..89351ba 100644
+--- a/node_modules/@atproto/identity/dist/handle/index.js
++++ b/node_modules/@atproto/identity/dist/handle/index.js
+@@ -1,112 +1,187 @@
+ "use strict";
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
++var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
++    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
++    return new (P || (P = Promise))(function (resolve, reject) {
++        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
++        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
++        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
++        step((generator = generator.apply(thisArg, _arguments || [])).next());
++    });
++};
++var __generator = (this && this.__generator) || function (thisArg, body) {
++    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
++    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
++    function verb(n) { return function (v) { return step([n, v]); }; }
++    function step(op) {
++        if (f) throw new TypeError("Generator is already executing.");
++        while (g && (g = 0, op[0] && (_ = 0)), _) try {
++            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
++            if (y = 0, t) op = [op[0] & 2, t.value];
++            switch (op[0]) {
++                case 0: case 1: t = op; break;
++                case 4: _.label++; return { value: op[1], done: false };
++                case 5: _.label++; y = op[1]; op = [0]; continue;
++                case 7: op = _.ops.pop(); _.trys.pop(); continue;
++                default:
++                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
++                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
++                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
++                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
++                    if (t[2]) _.ops.pop();
++                    _.trys.pop(); continue;
++            }
++            op = body.call(thisArg, _);
++        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
++        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
++    }
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.HandleResolver = void 0;
+-const promises_1 = __importDefault(require("dns/promises"));
+-const SUBDOMAIN = '_atproto';
+-const PREFIX = 'did=';
+-class HandleResolver {
+-    constructor(opts = {}) {
+-        Object.defineProperty(this, "timeout", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
++var promises_1 = require("dns/promises");
++var SUBDOMAIN = '_atproto';
++var PREFIX = 'did=';
++var HandleResolver = /** @class */ (function () {
++    function HandleResolver(opts) {
++        if (opts === void 0) { opts = {}; }
++        var _a;
++        this.timeout = (_a = opts.timeout) !== null && _a !== void 0 ? _a : 3000;
++        this.backupNameservers = opts.backupNameservers;
++    }
++    HandleResolver.prototype.resolve = function (handle) {
++        return __awaiter(this, void 0, void 0, function () {
++            var dnsPromise, httpAbort, httpPromise, dnsRes, res;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        dnsPromise = this.resolveDns(handle);
++                        httpAbort = new AbortController();
++                        httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(function () { return undefined; });
++                        return [4 /*yield*/, dnsPromise];
++                    case 1:
++                        dnsRes = _a.sent();
++                        if (dnsRes) {
++                            httpAbort.abort();
++                            return [2 /*return*/, dnsRes];
++                        }
++                        return [4 /*yield*/, httpPromise];
++                    case 2:
++                        res = _a.sent();
++                        if (res) {
++                            return [2 /*return*/, res];
++                        }
++                        return [2 /*return*/, this.resolveDnsBackup(handle)];
++                }
++            });
+         });
+-        Object.defineProperty(this, "backupNameservers", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
++    };
++    HandleResolver.prototype.resolveDns = function (handle) {
++        return __awaiter(this, void 0, void 0, function () {
++            var chunkedResults, err_1;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        _a.trys.push([0, 2, , 3]);
++                        return [4 /*yield*/, promises_1.default.resolveTxt("".concat(SUBDOMAIN, ".").concat(handle))];
++                    case 1:
++                        chunkedResults = _a.sent();
++                        return [3 /*break*/, 3];
++                    case 2:
++                        err_1 = _a.sent();
++                        return [2 /*return*/, undefined];
++                    case 3: return [2 /*return*/, this.parseDnsResult(chunkedResults)];
++                }
++            });
+         });
+-        Object.defineProperty(this, "backupNameserverIps", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
++    };
++    HandleResolver.prototype.resolveHttp = function (handle, signal) {
++        return __awaiter(this, void 0, void 0, function () {
++            var url, res, did, err_2;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        url = new URL('/.well-known/atproto-did', "https://".concat(handle));
++                        _a.label = 1;
++                    case 1:
++                        _a.trys.push([1, 4, , 5]);
++                        return [4 /*yield*/, fetch(url, { signal: signal })];
++                    case 2:
++                        res = _a.sent();
++                        return [4 /*yield*/, res.text()];
++                    case 3:
++                        did = (_a.sent()).split('\n')[0].trim();
++                        if (typeof did === 'string' && did.startsWith('did:')) {
++                            return [2 /*return*/, did];
++                        }
++                        return [2 /*return*/, undefined];
++                    case 4:
++                        err_2 = _a.sent();
++                        return [2 /*return*/, undefined];
++                    case 5: return [2 /*return*/];
++                }
++            });
+         });
+-        this.timeout = opts.timeout ?? 3000;
+-        this.backupNameservers = opts.backupNameservers;
+-    }
+-    async resolve(handle) {
+-        const dnsPromise = this.resolveDns(handle);
+-        const httpAbort = new AbortController();
+-        const httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(() => undefined);
+-        const dnsRes = await dnsPromise;
+-        if (dnsRes) {
+-            httpAbort.abort();
+-            return dnsRes;
+-        }
+-        const res = await httpPromise;
+-        if (res) {
+-            return res;
+-        }
+-        return this.resolveDnsBackup(handle);
+-    }
+-    async resolveDns(handle) {
+-        let chunkedResults;
+-        try {
+-            chunkedResults = await promises_1.default.resolveTxt(`${SUBDOMAIN}.${handle}`);
+-        }
+-        catch (err) {
+-            return undefined;
+-        }
+-        return this.parseDnsResult(chunkedResults);
+-    }
+-    async resolveHttp(handle, signal) {
+-        const url = new URL('/.well-known/atproto-did', `https://${handle}`);
+-        try {
+-            const res = await fetch(url, { signal });
+-            const did = (await res.text()).split('\n')[0].trim();
+-            if (typeof did === 'string' && did.startsWith('did:')) {
+-                return did;
+-            }
+-            return undefined;
+-        }
+-        catch (err) {
+-            return undefined;
+-        }
+-    }
+-    async resolveDnsBackup(handle) {
+-        let chunkedResults;
+-        try {
+-            const backupIps = await this.getBackupNameserverIps();
+-            if (!backupIps || backupIps.length < 1)
+-                return undefined;
+-            const resolver = new promises_1.default.Resolver();
+-            resolver.setServers(backupIps);
+-            chunkedResults = await resolver.resolveTxt(`${SUBDOMAIN}.${handle}`);
+-        }
+-        catch (err) {
+-            return undefined;
+-        }
+-        return this.parseDnsResult(chunkedResults);
+-    }
+-    parseDnsResult(chunkedResults) {
+-        const results = chunkedResults.map((chunks) => chunks.join(''));
+-        const found = results.filter((i) => i.startsWith(PREFIX));
++    };
++    HandleResolver.prototype.resolveDnsBackup = function (handle) {
++        return __awaiter(this, void 0, void 0, function () {
++            var chunkedResults, backupIps, resolver, err_3;
++            return __generator(this, function (_a) {
++                switch (_a.label) {
++                    case 0:
++                        _a.trys.push([0, 3, , 4]);
++                        return [4 /*yield*/, this.getBackupNameserverIps()];
++                    case 1:
++                        backupIps = _a.sent();
++                        if (!backupIps || backupIps.length < 1)
++                            return [2 /*return*/, undefined];
++                        resolver = new promises_1.default.Resolver();
++                        resolver.setServers(backupIps);
++                        return [4 /*yield*/, resolver.resolveTxt("".concat(SUBDOMAIN, ".").concat(handle))];
++                    case 2:
++                        chunkedResults = _a.sent();
++                        return [3 /*break*/, 4];
++                    case 3:
++                        err_3 = _a.sent();
++                        return [2 /*return*/, undefined];
++                    case 4: return [2 /*return*/, this.parseDnsResult(chunkedResults)];
++                }
++            });
++        });
++    };
++    HandleResolver.prototype.parseDnsResult = function (chunkedResults) {
++        var results = chunkedResults.map(function (chunks) { return chunks.join(''); });
++        var found = results.filter(function (i) { return i.startsWith(PREFIX); });
+         if (found.length !== 1) {
+             return undefined;
+         }
+         return found[0].slice(PREFIX.length);
+-    }
+-    async getBackupNameserverIps() {
+-        if (!this.backupNameservers) {
+-            return undefined;
+-        }
+-        else if (!this.backupNameserverIps) {
+-            const responses = await Promise.allSettled(this.backupNameservers.map((h) => promises_1.default.lookup(h)));
+-            for (const res of responses) {
+-                if (res.status === 'fulfilled') {
+-                    this.backupNameserverIps ?? (this.backupNameserverIps = []);
+-                    this.backupNameserverIps.push(res.value.address);
++    };
++    HandleResolver.prototype.getBackupNameserverIps = function () {
++        return __awaiter(this, void 0, void 0, function () {
++            var responses, _i, responses_1, res;
++            var _a;
++            return __generator(this, function (_b) {
++                switch (_b.label) {
++                    case 0:
++                        if (!!this.backupNameservers) return [3 /*break*/, 1];
++                        return [2 /*return*/, undefined];
++                    case 1:
++                        if (!!this.backupNameserverIps) return [3 /*break*/, 3];
++                        return [4 /*yield*/, Promise.allSettled(this.backupNameservers.map(function (h) { return promises_1.default.lookup(h); }))];
++                    case 2:
++                        responses = _b.sent();
++                        for (_i = 0, responses_1 = responses; _i < responses_1.length; _i++) {
++                            res = responses_1[_i];
++                            if (res.status === 'fulfilled') {
++                                (_a = this.backupNameserverIps) !== null && _a !== void 0 ? _a : (this.backupNameserverIps = []);
++                                this.backupNameserverIps.push(res.value.address);
++                            }
++                        }
++                        _b.label = 3;
++                    case 3: return [2 /*return*/, this.backupNameserverIps];
+                 }
+-            }
+-        }
+-        return this.backupNameserverIps;
+-    }
+-}
++            });
++        });
++    };
++    return HandleResolver;
++}());
+ exports.HandleResolver = HandleResolver;
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/id-resolver.js b/node_modules/@atproto/identity/dist/id-resolver.js
+index 770dc4a..a5114e4 100644
+--- a/node_modules/@atproto/identity/dist/id-resolver.js
++++ b/node_modules/@atproto/identity/dist/id-resolver.js
+@@ -1,32 +1,18 @@
+ "use strict";
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
+-};
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.IdResolver = void 0;
+-const handle_1 = require("./handle");
+-const did_resolver_1 = __importDefault(require("./did/did-resolver"));
+-class IdResolver {
+-    constructor(opts = {}) {
+-        Object.defineProperty(this, "handle", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
+-        });
+-        Object.defineProperty(this, "did", {
+-            enumerable: true,
+-            configurable: true,
+-            writable: true,
+-            value: void 0
+-        });
+-        const { timeout = 3000, plcUrl, didCache } = opts;
++var handle_1 = require("./handle");
++var did_resolver_1 = require("./did/did-resolver");
++var IdResolver = /** @class */ (function () {
++    function IdResolver(opts) {
++        if (opts === void 0) { opts = {}; }
++        var _a = opts.timeout, timeout = _a === void 0 ? 3000 : _a, plcUrl = opts.plcUrl, didCache = opts.didCache;
+         this.handle = new handle_1.HandleResolver({
+-            timeout,
++            timeout: timeout,
+             backupNameservers: opts.backupNameservers,
+         });
+-        this.did = new did_resolver_1.default({ timeout, plcUrl, didCache });
++        this.did = new did_resolver_1.default({ timeout: timeout, plcUrl: plcUrl, didCache: didCache });
+     }
+-}
++    return IdResolver;
++}());
+ exports.IdResolver = IdResolver;
+-//# sourceMappingURL=id-resolver.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/index.js b/node_modules/@atproto/identity/dist/index.js
+index bbecb07..9d701c5 100644
+--- a/node_modules/@atproto/identity/dist/index.js
++++ b/node_modules/@atproto/identity/dist/index.js
+@@ -19,4 +19,3 @@ __exportStar(require("./handle"), exports);
+ __exportStar(require("./id-resolver"), exports);
+ __exportStar(require("./errors"), exports);
+ __exportStar(require("./types"), exports);
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/dist/types.js b/node_modules/@atproto/identity/dist/types.js
+index f1fb208..fd2ee66 100644
+--- a/node_modules/@atproto/identity/dist/types.js
++++ b/node_modules/@atproto/identity/dist/types.js
+@@ -3,4 +3,3 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.didDocument = void 0;
+ var common_web_1 = require("@atproto/common-web");
+ Object.defineProperty(exports, "didDocument", { enumerable: true, get: function () { return common_web_1.didDocument; } });
+-//# sourceMappingURL=types.js.map
+\ No newline at end of file
+diff --git a/node_modules/@atproto/identity/src/did/plc-resolver.ts b/node_modules/@atproto/identity/src/did/plc-resolver.ts
+index cdac4eb..ecf3bcd 100644
+--- a/node_modules/@atproto/identity/src/did/plc-resolver.ts
++++ b/node_modules/@atproto/identity/src/did/plc-resolver.ts
+@@ -1,4 +1,3 @@
+-import axios, { AxiosError } from 'axios'
+ import BaseResolver from './base-resolver'
+ import { DidCache } from '../types'
+ 
+@@ -12,16 +11,30 @@ export class DidPlcResolver extends BaseResolver {
+   }
+ 
+   async resolveNoCheck(did: string): Promise<unknown> {
+-    try {
+-      const res = await axios.get(`${this.plcUrl}/${encodeURIComponent(did)}`, {
+-        timeout: this.timeout,
+-      })
+-      return res.data
+-    } catch (err) {
+-      if (err instanceof AxiosError && err.response?.status === 404) {
+-        return null // Positively not found, versus due to e.g. network error
+-      }
+-      throw err
++    // try {
++    //   const res = await axios.get(`${this.plcUrl}/${encodeURIComponent(did)}`, {
++    //     timeout: this.timeout,
++    //   })
++    //   return res.data
++    // } catch (err) {
++    //   if (err instanceof AxiosError && err.response?.status === 404) {
++    //     return null // Positively not found, versus due to e.g. network error
++    //   }
++    //   throw err
++    // }
++
++    const controller = new AbortController()
++    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
++
++    const res = await fetch(`${this.plcUrl}/${encodeURIComponent(did)}`, {
++      signal: controller.signal,
++    })
++    clearTimeout(timeoutId)
++
++    if (!res.ok) {
++      return null
+     }
++
++    return await res.text()
+   }
+ }
+diff --git a/node_modules/@atproto/identity/src/did/web-resolver.ts b/node_modules/@atproto/identity/src/did/web-resolver.ts
+index 201d70c..de8382f 100644
+--- a/node_modules/@atproto/identity/src/did/web-resolver.ts
++++ b/node_modules/@atproto/identity/src/did/web-resolver.ts
+@@ -1,4 +1,3 @@
+-import axios, { AxiosError } from 'axios'
+ import BaseResolver from './base-resolver'
+ import { DidCache } from '../types'
+ import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
+@@ -32,17 +31,30 @@ export class DidWebResolver extends BaseResolver {
+       url.protocol = 'http'
+     }
+ 
+-    try {
+-      const res = await axios.get(url.toString(), {
+-        responseType: 'json',
+-        timeout: this.timeout,
+-      })
+-      return res.data
+-    } catch (err) {
+-      if (err instanceof AxiosError && err.response) {
+-        return null // Positively not found, versus due to e.g. network error
+-      }
+-      throw err
++    // try {
++    //   const res = await axios.get(url.toString(), {
++    //     responseType: 'json',
++    //     timeout: this.timeout,
++    //   })
++    //   return res.data
++    // } catch (err) {
++    //   if (err instanceof AxiosError && err.response) {
++    //     return null // Positively not found, versus due to e.g. network error
++    //   }
++    //   throw err
++    // }
++    const controller = new AbortController()
++    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
++
++    const res = await fetch(url.toString(), {
++      signal: controller.signal,
++    })
++    clearTimeout(timeoutId)
++
++    if (!res.ok) {
++      return null
+     }
++
++    return await res.json()
+   }
+ }
+diff --git a/node_modules/@atproto/identity/tsconfig.build.tsbuildinfo b/node_modules/@atproto/identity/tsconfig.build.tsbuildinfo
+new file mode 100644
+index 0000000..86bfa82
+--- /dev/null
++++ b/node_modules/@atproto/identity/tsconfig.build.tsbuildinfo
+@@ -0,0 +1 @@
++{"root":["./src/errors.ts","./src/id-resolver.ts","./src/index.ts","./src/types.ts","./src/did/atproto-data.ts","./src/did/base-resolver.ts","./src/did/did-resolver.ts","./src/did/index.ts","./src/did/memory-cache.ts","./src/did/plc-resolver.ts","./src/did/web-resolver.ts","./src/handle/index.ts"],"errors":true,"version":"5.6.3"}
+\ No newline at end of file

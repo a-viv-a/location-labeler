@@ -69,6 +69,7 @@ app.use('/api/*', bearerAuth({
       c.set('did', payload.iss)
     } catch (e) {
       console.error(e)
+      console.error((e as Error).stack)
       return false
     }
     return true
