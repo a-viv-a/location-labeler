@@ -8,6 +8,9 @@ import { build_label_definition as buildLabelDefinition } from "./label";
 import { Place } from "./types";
 import SubscribeLabelsObject from "./SubscribeLabelsObject";
 import { cors } from "hono/cors";
+import { bearerAuth } from "hono/bearer-auth";
+import { IdResolver } from '@atproto/identity'
+import { verifyJwt } from "@atproto/xrpc-server";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -43,11 +46,35 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
 })
 
 
-app.use('/request-label', cors({
+// Verifying a service JWT
+// helper method to resolve a user's DID to their atproto signing key
+const idResolver = new IdResolver()
+const getSigningKey = async (
+  did: string,
+  forceRefresh: boolean,
+): Promise<string> => {
+  return idResolver.did.resolveAtprotoKey(did, forceRefresh)
+}
+
+app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['POST']
 }))
-app.post('/request-label', async (c) => {
+app.use('/api/*', bearerAuth({
+  verifyToken: async (token, c) => {
+    try {
+      console.log({ token })
+      // TODO: SWITCH TO INCLUDING THE DID PREFIX IN THE ENV VARIABLE TO AVOID ISSUES LIKE THIS
+      const payload = await verifyJwt(token, `did:${c.env.LABELER_DID}`, null, getSigningKey)
+      c.set('did', payload.iss)
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+    return true
+  }
+}))
+app.post('/api/request-label', async (c) => {
   const token = c.req.header('Token')
 
   if (token == undefined || token.length == 0) {
@@ -119,7 +146,7 @@ app.post('/request-label', async (c) => {
   const templateLabel = prepareLabel({
     src: c.env.LABELER_DID,
     // aviva.gay
-    target: 'plc:jx4g6baqkwdlonylsetvpu7c',
+    target: c.get('did'),
   }, labelDefinition)
 
   const signedLabels = await signAndRecordLabelNegatingPrevious(c.env, templateLabel)

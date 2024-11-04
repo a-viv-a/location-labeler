@@ -8,6 +8,8 @@ compatibility_flags = ["nodejs_compat"]
 "@fastify/websocket" = "./node_stubs/fastify_websocket"
 "fastify" = "./node_stubs/fastify"
 "libsql" = "./node_stubs/libsql"
+"express" = "./node_stubs/express"
+"http-errors" = "./node_stubs/http_errors"
 
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
