@@ -52,7 +52,7 @@ app.post('/request-label', async (c) => {
 
   if (token == undefined || token.length == 0) {
     c.status(401)
-    return c.json({ msg: "missing Token header" })
+    return c.json({ error: "missing Token header" })
   }
 
   // TODO: replace with actual auth
@@ -65,7 +65,7 @@ app.post('/request-label', async (c) => {
   const longitude_string = c.req.query('lon')
   if (latitude_string == undefined || longitude_string == undefined) {
     c.status(400)
-    return c.json({ msg: "invalid / missing lat and lon query params" })
+    return c.json({ error: "invalid / missing lat and lon query params" })
   }
 
 
@@ -73,7 +73,7 @@ app.post('/request-label', async (c) => {
   const cf_latitude_string = c.req.raw.cf?.latitude;
   if (cf_longitude_string == undefined || cf_latitude_string == undefined) {
     c.status(500)
-    return c.json({ msg: "cloudflare did not estimate lat/lon for request" })
+    return c.json({ error: "cloudflare did not estimate lat/lon for request" })
   }
 
   const latitude = parseFloat(latitude_string)
@@ -93,7 +93,7 @@ app.post('/request-label', async (c) => {
 
   if (estimatedDistanceMiles > 200) {
     c.status(400)
-    return c.json({ msg: 'ip estimated distance too far', estimatedDistanceMiles })
+    return c.json({ error: 'ip estimated distance too far', estimatedDistanceMiles })
   }
 
   const headers = new Headers({
@@ -101,6 +101,7 @@ app.post('/request-label', async (c) => {
   })
 
   // https://nominatim.org/release-docs/latest/api/Reverse/
+  // email included so nominatim can contact me if the usage is too much!
   const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?email=aviva@rubenfamily.com&format=jsonv2&addressdetails=1&zoom=10&lat=${latitude}&lon=${longitude}`, {
     "headers": headers,
     "body": null,
@@ -110,7 +111,7 @@ app.post('/request-label', async (c) => {
   console.log(place)
   if ('error' in place) {
     c.status(400)
-    return c.json({ msg: place.error })
+    return c.json({ error: place.error })
   }
   const labelDefinition = buildLabelDefinition(place)
   await ensureLabelExists(c.env, labelDefinition)
@@ -122,16 +123,17 @@ app.post('/request-label', async (c) => {
   }, labelDefinition)
 
   const signedLabels = await signAndRecordLabelNegatingPrevious(c.env, templateLabel)
+  const alreadyApplied = signedLabels.length === 0
 
-  // TODO: check how many labels are returned
+  if (!alreadyApplied) {
+    const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
+    const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
 
-  const id = c.env.SUBSCRIBE_LABELS_OBJECT.idFromName(primaryID)
-  const stub = c.env.SUBSCRIBE_LABELS_OBJECT.get(id)
-
-  await stub.announceLabels(signedLabels)
+    await stub.announceLabels(signedLabels)
+  }
 
   c.status(200)
-  return c.json({ labelDefinition, estimatedDistanceMiles })
+  return c.json({ msg: (alreadyApplied ? 'applied' : 'already applied'), labelDefinition, estimatedDistanceMiles })
 })
 
 export default app;
