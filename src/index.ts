@@ -78,17 +78,6 @@ app.use('/api/*', bearerAuth({
 app.post('/api/request-label', async (c) => {
   const token = c.req.header('Token')
 
-  if (token == undefined || token.length == 0) {
-    c.status(401)
-    return c.json({ error: "missing Token header" })
-  }
-
-  // TODO: replace with actual auth
-  if (token !== c.env.SECRET_TMP_TOKEN) {
-    c.status(500)
-    return c.text('not ready yet...')
-  }
-
   const latitude_string = c.req.query('lat')
   const longitude_string = c.req.query('lon')
   if (latitude_string == undefined || longitude_string == undefined) {
