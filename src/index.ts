@@ -67,6 +67,7 @@ app.use('/api/*', bearerAuth({
       const payload = await verifyJwt(token, c.env.LABELER_DID, null, getSigningKey)
       c.set('did', payload.iss)
     } catch (e) {
+      // TODO: remove these logs?
       console.error(e)
       console.error((e as Error).stack)
       return false
