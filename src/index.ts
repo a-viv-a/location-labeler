@@ -8,9 +8,7 @@ import { build_label_definition as buildLabelDefinition } from "./label";
 import { Place } from "./types";
 import SubscribeLabelsObject from "./SubscribeLabelsObject";
 import { cors } from "hono/cors";
-import { bearerAuth } from "hono/bearer-auth";
-import { IdResolver } from '@atproto/identity'
-import { verifyJwt } from "@atproto/xrpc-server";
+import { bearerDIDAuth, readDid } from "./bearerDIDAuth";
 
 /**
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
@@ -45,39 +43,13 @@ app.get('/xrpc/com.atproto.label.subscribeLabels', (c) => {
   return stub.fetch(c.req.raw)
 })
 
-
-// Verifying a service JWT
-// helper method to resolve a user's DID to their atproto signing key
-const idResolver = new IdResolver()
-const getSigningKey = async (
-  did: string,
-  forceRefresh: boolean,
-): Promise<string> => {
-  return idResolver.did.resolveAtprotoKey(did, forceRefresh)
-}
-
 app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['POST']
 }))
-app.use('/api/*', bearerAuth({
-  verifyToken: async (token, c) => {
-    try {
-      console.log({ token })
-      const payload = await verifyJwt(token, c.env.LABELER_DID, null, getSigningKey)
-      c.set('did', payload.iss)
-    } catch (e) {
-      // TODO: remove these logs?
-      console.error(e)
-      console.error((e as Error).stack)
-      return false
-    }
-    return true
-  }
-}))
-app.post('/api/clear-labels', async (c) => {
-  // TODO: fix this type error
-  const signedLabels = await negateAndRecordAllActiveLabels(c.env, c.get('did'))
+app.post('/api/clear-labels', bearerDIDAuth, async (c) => {
+  const did = readDid(c)
+  const signedLabels = await negateAndRecordAllActiveLabels(c.env, did)
   const alreadyClear = signedLabels.length === 0
 
   if (!alreadyClear) {
@@ -91,7 +63,8 @@ app.post('/api/clear-labels', async (c) => {
   c.status(200)
   return c.json({ msg: (alreadyClear ? 'already cleared' : 'cleared'), negatedCount: signedLabels.length })
 })
-app.post('/api/request-label', async (c) => {
+app.post('/api/request-label', bearerDIDAuth, async (c) => {
+  const did = readDid(c)
   const latitude_string = c.req.query('lat')
   const longitude_string = c.req.query('lon')
   if (latitude_string == undefined || longitude_string == undefined) {
@@ -149,8 +122,7 @@ app.post('/api/request-label', async (c) => {
 
   const templateLabel = prepareLabel({
     src: c.env.LABELER_DID,
-    // aviva.gay
-    target: c.get('did'),
+    target: did,
   }, labelDefinition)
 
   const signedLabels = await signAndRecordLabelNegatingPrevious(c.env, templateLabel)
